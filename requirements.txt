@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+SQLAlchemy>=2.0.0
+pydantic>=2.0.0
+pydantic[email]
+pydantic-settings
+python-dotenv
+python-multipart
+supabase
+asyncpg
+bcrypt
+python-jose[cryptography]
+jinja2
+aiofiles
+psycopg2-binary
