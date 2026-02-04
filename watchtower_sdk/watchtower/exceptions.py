@@ -1,0 +1,2 @@
+class WatchtowerSDKError(Exception):
+    pass

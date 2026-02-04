@@ -63,7 +63,8 @@ async def create_monitor_config(
         new_config = models.ProjectConfig(
             project_id=current_project.project_id,
             baseline_batch_size=config.baseline_batch_size,
-            monitor_batch_size=config.monitor_batch_size
+            monitor_batch_size=config.monitor_batch_size,
+            monitoring_stage=config.monitoring_stage  # Store monitoring stage
         )
 
         db.add(new_config)

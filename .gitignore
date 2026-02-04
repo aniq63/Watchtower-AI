@@ -205,3 +205,9 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Files
+demo.py
+
+# Directories
+test_datasets_for_ingestion

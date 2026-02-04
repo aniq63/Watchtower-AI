@@ -62,7 +62,7 @@ Base = declarative_base()
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency for FastAPI routes to get database session.
-    Automatically handles session lifecycle.
+    Automatically handles session lifecycle with proper error handling.
     
     Usage:
         @router.get("/endpoint")
@@ -72,10 +72,11 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
         try:
             yield session
-            await session.commit()
         except Exception:
             await session.rollback()
             raise
+        else:
+            await session.commit()
         finally:
             await session.close()
 

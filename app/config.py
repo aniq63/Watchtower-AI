@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
     
     # API Keys
-    # groq_api_key: str = Field(..., alias="GROQ_API_KEY")
+    groq_api_key: str = Field(..., alias="GROQ_API_KEY")
     
     # Supabase Configuration
     # supabase_url: str = Field(..., alias="SUPABASE_URL")

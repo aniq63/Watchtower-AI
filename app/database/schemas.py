@@ -74,6 +74,7 @@ class ProjectConfigCreate(BaseModel):
     """Schema for project configuration."""
     baseline_batch_size: int = Field(..., ge=1)
     monitor_batch_size: int = Field(..., ge=1)
+    monitoring_stage: str = Field(default="model_input")  # single stage per project
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -82,3 +83,7 @@ class ProjectConfigResponse(BaseModel):
     project_id: int
     baseline_batch_size: int
     monitor_batch_size: int
+    monitoring_stage: str
+
+    model_config = ConfigDict(from_attributes=True)
+
