@@ -504,3 +504,190 @@ class PredictionDrift(Base):
     __table_args__ = (
         Index("idx_pred_drift_project_batch", "project_id", "batch_number"),
     )
+
+
+# ---------- LLM MONITORING ----------
+
+class LLMConfig(Base):
+    """Stores LLM monitoring configuration per project"""
+    __tablename__ = "llm_config"
+
+    project_id = Column(
+        Integer,
+        ForeignKey("projects.project_id", ondelete="CASCADE"),
+        primary_key=True
+    )
+    baseline_batch_size = Column(Integer, nullable=False, default=500)
+    monitor_batch_size = Column(Integer, nullable=False, default=250)
+    toxicity_threshold = Column(Float, nullable=False, default=0.5)
+    token_drift_threshold = Column(Float, nullable=False, default=0.15)  # 15% change triggers drift
+    
+    created_at = Column(TIMESTAMP, server_default=func.now())
+
+    project = relationship("Project", back_populates="llm_config")
+
+
+# Add back_populates in Project
+Project.llm_config = relationship(
+    "LLMConfig",
+    back_populates="project",
+    uselist=False,
+    cascade="all, delete-orphan"
+)
+
+
+class LLMMonitor(Base):
+    """Stores LLM interaction logs with toxicity and judge metrics"""
+    __tablename__ = "llm_monitor"
+
+    id = Column(Integer, primary_key=True, index=True)
+    project_id = Column(
+        Integer,
+        ForeignKey("projects.project_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    row_id = Column(Integer, nullable=False, index=True)
+    
+    # LLM Interaction data
+    input_text = Column(Text, nullable=False)
+    response_text = Column(Text, nullable=False)
+    
+    # Token analysis
+    response_token_length = Column(Integer, nullable=False)
+    
+    # Toxicity analysis (full Detoxify results + boolean flag)
+    detoxify = Column(JSON, nullable=False)  # {toxicity, severe_toxicity, obscene, threat, insult, identity_attack}
+    is_toxic = Column(Boolean, nullable=False, default=False)
+    
+    # LLM Judge metrics
+    llm_judge_metrics = Column(JSON, nullable=True)  # {accuracy, completeness, clarity, relevance, logical_flow, creativity}
+    
+    # Drift flag
+    has_drift = Column(Boolean, nullable=False, default=False)
+    
+    created_at = Column(TIMESTAMP, server_default=func.now())
+
+    project = relationship("Project", back_populates="llm_monitors")
+
+    __table_args__ = (
+        Index("idx_llm_monitor_project", "project_id"),
+        Index("idx_llm_monitor_project_row", "project_id", "row_id"),
+        Index("idx_llm_monitor_created", "project_id", "created_at"),
+    )
+
+
+# Add back_populates in Project
+Project.llm_monitors = relationship(
+    "LLMMonitor",
+    back_populates="project",
+    cascade="all, delete-orphan"
+)
+
+
+class LLMBaselineInfo(Base):
+    """Tracks baseline information for LLM monitoring"""
+    __tablename__ = "llm_baseline_info"
+
+    baseline_id = Column(Integer, primary_key=True, index=True)
+    project_id = Column(
+        Integer,
+        ForeignKey("projects.project_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    baseline_start_row = Column(Integer, nullable=False)
+    baseline_end_row = Column(Integer, nullable=False)
+    
+    avg_response_token_length = Column(Float, nullable=False)
+    
+    created_at = Column(TIMESTAMP, server_default=func.now())
+
+    project = relationship("Project", back_populates="llm_baselines")
+
+    __table_args__ = (
+        Index("idx_llm_baseline_project", "project_id"),
+    )
+
+
+# Add back_populates in Project
+Project.llm_baselines = relationship(
+    "LLMBaselineInfo",
+    back_populates="project",
+    cascade="all, delete-orphan"
+)
+
+
+class LLMMonitorInfo(Base):
+    """Tracks current monitoring window for LLM"""
+    __tablename__ = "llm_monitor_info"
+
+    monitor_id = Column(Integer, primary_key=True, index=True)
+    project_id = Column(
+        Integer,
+        ForeignKey("projects.project_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    monitor_start_row = Column(Integer, nullable=False)
+    monitor_end_row = Column(Integer, nullable=False)
+    
+    current_avg_token_length = Column(Float, nullable=True)
+    
+    last_updated = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
+
+    project = relationship("Project", back_populates="llm_monitor_infos")
+
+    __table_args__ = (
+        Index("idx_llm_monitor_info_project", "project_id"),
+    )
+
+
+# Add back_populates in Project
+Project.llm_monitor_infos = relationship(
+    "LLMMonitorInfo",
+    back_populates="project",
+    cascade="all, delete-orphan"
+)
+
+
+class LLMDrift(Base):
+    """Stores LLM response token length drift detection results"""
+    __tablename__ = "llm_drift"
+
+    id = Column(Integer, primary_key=True, index=True)
+    project_id = Column(
+        Integer,
+        ForeignKey("projects.project_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    
+    baseline_window = Column(String, nullable=False)  # e.g., "rows 1–500"
+    monitor_window = Column(String, nullable=False)   # e.g., "rows 501–750"
+    
+    baseline_avg_tokens = Column(Float, nullable=False)
+    monitor_avg_tokens = Column(Float, nullable=False)
+    
+    token_length_change = Column(Float, nullable=False)  # percentage change
+    has_drift = Column(Boolean, nullable=False, default=False)
+    
+    # LLM-generated interpretation
+    drift_interpretation = Column(Text, nullable=True)
+    
+    created_at = Column(TIMESTAMP, server_default=func.now())
+
+    project = relationship("Project", back_populates="llm_drifts")
+
+    __table_args__ = (
+        Index("idx_llm_drift_project", "project_id"),
+        Index("idx_llm_drift_created", "project_id", "created_at"),
+    )
+
+
+# Add back_populates in Project
+Project.llm_drifts = relationship(
+    "LLMDrift",
+    back_populates="project",
+    cascade="all, delete-orphan"
+)

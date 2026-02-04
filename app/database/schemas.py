@@ -87,3 +87,174 @@ class ProjectConfigResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
+# ===== LLM Monitoring Schemas =====
+
+class LLMConfigCreate(BaseModel):
+    """Schema for LLM monitoring configuration."""
+    baseline_batch_size: int = Field(default=500, ge=1)
+    monitor_batch_size: int = Field(default=250, ge=1)
+    toxicity_threshold: float = Field(default=0.5, ge=0.0, le=1.0)
+    token_drift_threshold: float = Field(default=0.15, ge=0.0, le=1.0)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LLMConfigResponse(BaseModel):
+    """Response model for LLM monitoring configuration."""
+    project_id: int
+    baseline_batch_size: int
+    monitor_batch_size: int
+    toxicity_threshold: float
+    token_drift_threshold: float
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LLMInteractionCreate(BaseModel):
+    """Schema for logging LLM interaction."""
+    project_name: str = Field(..., min_length=1)
+    input_text: str = Field(..., min_length=1)
+    response_text: str = Field(..., min_length=1)
+    metadata: Optional[dict] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LLMInteractionResponse(BaseModel):
+    """Response model for logged LLM interaction."""
+    id: int
+    project_id: int
+    row_id: int
+    response_token_length: int
+    is_toxic: bool
+    judge_metrics: Optional[dict] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LLMBaselineInfoResponse(BaseModel):
+    """Response model for LLM baseline information."""
+    baseline_start_row: int
+    baseline_end_row: int
+    avg_response_token_length: float
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LLMMonitorInfoResponse(BaseModel):
+    """Response model for LLM monitor information."""
+    monitor_start_row: int
+    monitor_end_row: int
+    current_avg_token_length: Optional[float] = None
+    last_updated: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LLMDriftResponse(BaseModel):
+    """Response model for LLM drift detection result."""
+    id: int
+    baseline_window: str
+    monitor_window: str
+    baseline_avg_tokens: float
+    monitor_avg_tokens: float
+    token_length_change: float
+    has_drift: bool
+    drift_interpretation: Optional[str] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+# ===== LLM Monitoring Schemas =====
+
+class LLMConfigCreate(BaseModel):
+    """Schema for LLM configuration creation."""
+    baseline_batch_size: int = Field(default=500, ge=1)
+    monitor_batch_size: int = Field(default=250, ge=1)
+    toxicity_threshold: float = Field(default=0.5, ge=0.0, le=1.0)
+    token_drift_threshold: float = Field(default=0.15, ge=0.0, le=1.0)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LLMConfigResponse(BaseModel):
+    """Response model for LLM configuration."""
+    project_id: int
+    baseline_batch_size: int
+    monitor_batch_size: int
+    toxicity_threshold: float
+    token_drift_threshold: float
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LLMMonitorCreate(BaseModel):
+    """Schema for logging LLM interactions."""
+    project_name: str = Field(..., min_length=1)
+    input_text: str = Field(..., min_length=1)
+    response_text: str = Field(..., min_length=1)
+    metadata: Optional[dict] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LLMMonitorResponse(BaseModel):
+    """Response model for logged LLM interaction."""
+    id: int
+    project_id: int
+    row_id: int
+    input_text: str
+    response_text: str
+    response_token_length: int
+    detoxify: dict
+    is_toxic: bool
+    llm_judge_metrics: Optional[dict]
+    has_drift: bool
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LLMBaselineInfoResponse(BaseModel):
+    """Response model for LLM baseline information."""
+    baseline_id: int
+    project_id: int
+    baseline_start_row: int
+    baseline_end_row: int
+    avg_response_token_length: float
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LLMMonitorInfoResponse(BaseModel):
+    """Response model for LLM monitor window information."""
+    monitor_id: int
+    project_id: int
+    monitor_start_row: int
+    monitor_end_row: int
+    current_avg_token_length: Optional[float]
+    last_updated: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LLMDriftResponse(BaseModel):
+    """Response model for LLM drift detection."""
+    id: int
+    project_id: int
+    baseline_window: str
+    monitor_window: str
+    baseline_avg_tokens: float
+    monitor_avg_tokens: float
+    token_length_change: float
+    has_drift: bool
+    drift_interpretation: Optional[str]
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
