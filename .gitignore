@@ -208,6 +208,8 @@ __marimo__/
 
 # Files
 demo.py
+verify_model_drift.py
 
 # Directories
 test_datasets_for_ingestion
+frontend

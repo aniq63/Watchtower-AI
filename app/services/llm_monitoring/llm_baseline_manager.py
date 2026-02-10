@@ -57,8 +57,8 @@ class LLMBaselineManager:
 
                 # 3. Check if baseline already exists
                 baseline_result = await db.execute(
-                    select(models.LLMBaselineInfo).where(
-                        models.LLMBaselineInfo.project_id == self.project_id
+                    select(models.LLMBaseline).where(
+                        models.LLMBaseline.project_id == self.project_id
                     )
                 )
                 baseline_info = baseline_result.scalars().first()
@@ -74,7 +74,7 @@ class LLMBaselineManager:
                             db, baseline_start, baseline_end
                         )
 
-                        new_baseline = models.LLMBaselineInfo(
+                        new_baseline = models.LLMBaseline(
                             project_id=self.project_id,
                             baseline_start_row=baseline_start,
                             baseline_end_row=baseline_end,
@@ -99,8 +99,8 @@ class LLMBaselineManager:
                             await db.rollback()
                             # Check if already created by another process
                             baseline_result = await db.execute(
-                                select(models.LLMBaselineInfo).where(
-                                    models.LLMBaselineInfo.project_id == self.project_id
+                                select(models.LLMBaseline).where(
+                                    models.LLMBaseline.project_id == self.project_id
                                 )
                             )
                             baseline_info = baseline_result.scalars().first()
@@ -237,8 +237,8 @@ class LLMBaselineManager:
         async for db in get_db():
             try:
                 baseline_result = await db.execute(
-                    select(models.LLMBaselineInfo).where(
-                        models.LLMBaselineInfo.project_id == self.project_id
+                    select(models.LLMBaseline).where(
+                        models.LLMBaseline.project_id == self.project_id
                     )
                 )
                 baseline_info = baseline_result.scalars().first()

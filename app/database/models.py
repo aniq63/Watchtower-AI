@@ -15,6 +15,10 @@ from sqlalchemy.orm import relationship
 import uuid
 from app.database.connection import Base
 
+# =============================================================================
+# CORE MODELS
+# =============================================================================
+
 class Company(Base):
     __tablename__ = "company"
 
@@ -32,7 +36,6 @@ class Company(Base):
         cascade="all, delete-orphan"
     )
 
-
 class Project(Base):
     __tablename__ = "projects"
 
@@ -43,63 +46,129 @@ class Project(Base):
         nullable=False,
         index=True
     )
-    project_name = Column(String(255), nullable=False,unique=True)
-    project_description = Column(Text, nullable = True)
+    project_name = Column(String(255), nullable=False, unique=True)
+    project_description = Column(Text, nullable=True)
     access_token = Column(String(255), nullable=True, unique=True, index=True)
+    total_batches = Column(Integer, default=0, nullable=False)
+    project_type = Column(
+        String(50), 
+        nullable=False, 
+        default="feature_monitoring"
+    )  # Options: 'feature_monitoring', 'llm_monitoring', 'prediction_monitoring'
     created_at = Column(TIMESTAMP, server_default=func.now())
 
     company = relationship("Company", back_populates="projects")
 
-    # NEW relationships
+    # FEATURE MONITORING Relationships
     feature_inputs = relationship(
         "FeatureInput",
         back_populates="project",
         cascade="all, delete-orphan"
     )
+    feature_config = relationship(
+        "FeatureConfig",
+        back_populates="project",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
+    feature_drifts = relationship(
+        "FeatureDrift", 
+        back_populates="project", 
+        cascade="all, delete-orphan"
+    )
+    feature_stats = relationship(
+        "FeatureStats",
+        back_populates="project",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
+    feature_quality_checks = relationship(
+        "FeatureQualityCheck",
+        back_populates="project",
+        cascade="all, delete-orphan"
+    )
+    feature_validation_params = relationship(
+        "FeatureValidationParams",
+        back_populates="project",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
+    feature_validations = relationship(
+        "FeatureValidation",
+        back_populates="project",
+        cascade="all, delete-orphan"
+    )
+    model_drifts = relationship(
+        "ModelBasedDrift", 
+        back_populates="project",
+        cascade="all, delete-orphan"
+    )
+    feature_baselines = relationship(
+        "FeatureBaseline",
+        back_populates="project",
+        cascade="all, delete-orphan"
+    )
+    feature_monitor_info = relationship(
+        "FeatureMonitorInfo",
+        back_populates="project",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
+
+    # PREDICTION MONITORING Relationships
     prediction_outputs = relationship(
         "PredictionOutput",
         back_populates="project",
         cascade="all, delete-orphan"
     )
-
-    data_stats = relationship(
-        "ProjectDataStats",
+    prediction_config = relationship(
+        "PredictionConfig",
         back_populates="project",
         uselist=False,
         cascade="all, delete-orphan"
     )
-
-    quality_checks = relationship(
-        "DataQualityCheck",
-        back_populates="project",
-        cascade="all, delete-orphan"
-    )
-
-    validation_params = relationship(
-        "DataValidationParameters",
-        back_populates="project",
-        uselist=False,
-        cascade="all, delete-orphan"
-    )
-
-    validations = relationship(
-        "DataValidation",
-        back_populates="project",
-        cascade="all, delete-orphan"
-    )
-
     prediction_metrics = relationship(
         "PredictionMetrics",
         back_populates="project",
         cascade="all, delete-orphan"
     )
-
     prediction_drifts = relationship(
         "PredictionDrift",
         back_populates="project",
         cascade="all, delete-orphan"
     )
 
+    # LLM MONITORING Relationships
+    llm_config = relationship(
+        "LLMConfig",
+        back_populates="project",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
+    llm_monitors = relationship(
+        "LLMMonitor",
+        back_populates="project",
+        cascade="all, delete-orphan"
+    )
+    llm_baselines = relationship(
+        "LLMBaseline",
+        back_populates="project",
+        cascade="all, delete-orphan"
+    )
+    llm_monitor_infos = relationship(
+        "LLMMonitorInfo",
+        back_populates="project",
+        cascade="all, delete-orphan"
+    )
+    llm_drifts = relationship(
+        "LLMDrift",
+        back_populates="project",
+        cascade="all, delete-orphan"
+    )
+
+# =============================================================================
+# FEATURE MONITORING SDK
+# =============================================================================
 
 class FeatureInput(Base):
     __tablename__ = "feature_input"
@@ -112,44 +181,19 @@ class FeatureInput(Base):
         index=True
     )
     row_id = Column(Integer, nullable=False, index=True)
-    features = Column(JSON, nullable=False)  # store all features as JSON
-    stage = Column(String(50), nullable=False, default="model_input", index=True)  # monitoring stage
+    features = Column(JSON, nullable=False)
+    stage = Column(String(50), nullable=False, default="model_input", index=True)
     created_at = Column(TIMESTAMP, server_default=func.now())
 
     project = relationship("Project", back_populates="feature_inputs")
 
-    # Optional index for faster lookups by project and stage
     __table_args__ = (
-        Index("idx_feature_input_project", "project_id"),
-        Index("idx_feature_project_stage", "project_id", "stage"),
+        Index("idx_feature_input_project_id", "project_id"),
+        Index("idx_feature_input_project_stage", "project_id", "stage"),
     )
 
-
-class PredictionOutput(Base):
-    __tablename__ = "prediction_output"
-
-    id = Column(Integer, primary_key=True, index=True)
-    project_id = Column(
-        Integer,
-        ForeignKey("projects.project_id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
-    )
-    row_id = Column(Integer, nullable=False, index=True)
-    prediction = Column(JSON, nullable=True)  # store predictions as JSON
-    created_at = Column(TIMESTAMP, server_default=func.now())
-
-    project = relationship("Project", back_populates="prediction_outputs")
-
-    # Optional index for faster lookups by project and stage
-    __table_args__ = (
-        Index("idx_prediction_output_project", "project_id"),
-    )
-
-# ---------- PROJECT CONFIG ----------
-
-class ProjectConfig(Base):
-    __tablename__ = "project_config"
+class FeatureConfig(Base):
+    __tablename__ = "feature_config"
 
     project_id = Column(
         Integer,
@@ -158,185 +202,12 @@ class ProjectConfig(Base):
     )
     baseline_batch_size = Column(Integer, nullable=False, default=1000)
     monitor_batch_size = Column(Integer, nullable=False, default=500)
-    monitoring_stage = Column(String(50), nullable=False, default="model_input")  # single stage per project
+    monitoring_stage = Column(String(50), nullable=False, default="model_input")
 
-    project = relationship("Project", back_populates="config")
+    project = relationship("Project", back_populates="feature_config")
 
-
-# Add back_populates in Project
-Project.config = relationship(
-    "ProjectConfig",
-    back_populates="project",
-    uselist=False,  # one config per project
-    cascade="all, delete-orphan"
-)
-
-
-# ---------- MONITOR BATCH/STATS INFO ----------
-
-class ProjectDataStats(Base):
-    __tablename__ = "project_data_stats"
-
-    project_id = Column(
-        Integer,
-        ForeignKey("projects.project_id", ondelete="CASCADE"),
-        primary_key=True
-    )
-    
-    # Specific ranges for the LATEST ingestion event
-    latest_feature_start_row = Column(Integer, nullable=True)
-    latest_feature_end_row = Column(Integer, nullable=True)
-    latest_prediction_start_row = Column(Integer, nullable=True)
-    latest_prediction_end_row = Column(Integer, nullable=True)
-    
-    # Overall counters
-    total_batches = Column(Integer, default=0, nullable=False)
-    
-    # Timestamps
-    last_ingestion_at = Column(
-        TIMESTAMP, 
-        server_default=func.now(), 
-        onupdate=func.now()
-    )
-
-    project = relationship("Project", back_populates="data_stats")
-
-# ---------- DATA QUALITY CHECKS ----------
-
-class DataQualityCheck(Base):
-    __tablename__ = "data_quality_checks"
-
-    id = Column(Integer, primary_key=True, index=True)
-    project_id = Column(
-        Integer,
-        ForeignKey("projects.project_id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
-    )
-    
-    # Batch information
-    batch_number = Column(Integer, nullable=False)
-    check_timestamp = Column(TIMESTAMP, server_default=func.now())
-    
-    # Row range checked
-    feature_start_row = Column(Integer, nullable=True)
-    feature_end_row = Column(Integer, nullable=True)
-    total_rows_checked = Column(Integer, default=0)
-    
-    # Missing value results (stored as JSON)
-    missing_values_summary = Column(JSON, nullable=True)  # {column: {count: X, percentage: Y}}
-    
-    # Duplicate row results (stored as JSON)
-    duplicate_percentage = Column(Float, default = 0.0)
-    total_duplicate_rows = Column(Integer, default=0)
-    
-    # Overall statistics
-    total_columns_checked = Column(Integer, default=0)
-    columns_with_missing = Column(Integer, default=0)
-    
-    # Status
-    check_status = Column(String(50), default="completed")  # completed, failed, pending
-    error_message = Column(Text, nullable=True)
-    
-    project = relationship("Project", back_populates="quality_checks")
-
-    __table_args__ = (
-        Index("idx_quality_project_batch", "project_id", "batch_number"),
-    )
-
-# ---------- DATA VALIDATION ----------
-
-class DataValidationParameters(Base):
-    """Stores the expected schema (rules) for a project's data"""
-    __tablename__ = "data_validation_parameters"
-    __table_args__ = {"keep_existing": True}
-
-    id = Column(Integer, primary_key=True, index=True)
-    project_id = Column(Integer, ForeignKey("projects.project_id", ondelete="CASCADE"), index=True)
-    
-    len_columns = Column(Integer, nullable=False)
-    columns_type = Column(JSON, nullable=False)  # {"col1": "float64", "col2": "object"}
-    
-    created_at = Column(TIMESTAMP, server_default=func.now())
-    project = relationship("Project", back_populates="validation_params")
-
-
-class DataValidation(Base):
-    """Stores the results of validating a batch against the parameters"""
-    __tablename__ = "data_validation"
-    __table_args__ = {"keep_existing": True}
-
-    id = Column(Integer, primary_key=True, index=True)
-    project_id = Column(Integer, ForeignKey("projects.project_id", ondelete="CASCADE"), index=True)
-    batch_number = Column(Integer, nullable=False)
-    
-    # Specific check results
-    len_columns_status = Column(Boolean, nullable=False)
-    columns_type_status = Column(Boolean, nullable=False)
-    
-    # Overall status
-    validation_status = Column(Boolean, nullable=False)
-    
-    created_at = Column(TIMESTAMP, server_default=func.now())
-    project = relationship("Project", back_populates="validations")
-
-
-# ---------- BASELINE INFO ----------
-
-class BaselineInfo(Base):
-    __tablename__ = "baseline_info"
-
-    baseline_id = Column(Integer, primary_key=True, index=True)
-    project_id = Column(
-        Integer,
-        ForeignKey("projects.project_id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
-    )
-    baseline_start_row_feature_input = Column(Integer, nullable=False)  # start of baseline window
-    baseline_end_row_feature_input = Column(Integer, nullable=False,default = 1)    # end of baseline window
-
-    baseline_start_row_prediction_output = Column(Integer, nullable=False)
-    baseline_end_row_prediction_output = Column(Integer, nullable=False)
-
-    temp_baseline_batch_size = Column(Integer, nullable = False)
-
-    created_at = Column(TIMESTAMP, server_default=func.now())
-
-    project = relationship("Project", back_populates="baselines")
-
-    __table_args__ = (
-        Index("idx_baseline_project_created", "project_id", "created_at"),
-    )
-
-
-# Add back_populates in Project
-Project.baselines = relationship(
-    "BaselineInfo",
-    back_populates="project",
-    cascade="all, delete-orphan"
-)
-
-class MonitorInfo(Base):
-    __tablename__ = "monitor_info"
-
-    monitor_id = Column(Integer, primary_key=True, index=True)
-    project_id = Column(
-        Integer,
-        ForeignKey("projects.project_id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
-    )
-
-    monitor_start_row_feature_input = Column(Integer, nullable=False)  # start of monitoring window
-    monitor_end_row_feature_input = Column(Integer, nullable=False)  # end of monitoring window
-
-
-# ---------- DATA DRIFT ----------
-
-
-class DataDriftConfig(Base):
-    __tablename__ = 'data_drift_config'
+class FeatureDriftConfig(Base):
+    __tablename__ = 'feature_drift_config'
 
     config_id = Column(Integer, primary_key=True, index=True)
     project_id = Column(
@@ -349,23 +220,16 @@ class DataDriftConfig(Base):
     mean_threshold = Column(Float, nullable=False, default=0.1)
     median_threshold = Column(Float, nullable=False, default=0.1)
     variance_threshold = Column(Float, nullable=False, default=0.2)
-    quantile_threshold = Column(Float, nullable=False, default=0.2)
-
     ks_pvalue_threshold = Column(Float, nullable=False, default=0.05)
-
     psi_threshold = Column(JSON, nullable=False, default=[0.1, 0.25])
     psi_bins = Column(Integer, nullable=False, default=10)
     min_samples = Column(Integer, nullable=False, default=50)
-
-    alert_threshold = Column(Integer, nullable=False, default=2)  # Number of signals to trigger alert
-
+    alert_threshold = Column(Integer, nullable=False, default=2)
     model_based_drift_threshold = Column(Float, nullable=False, default=0.50)
-
     created_at = Column(TIMESTAMP, server_default=func.now())
 
-
-class DataDrift(Base):
-    __tablename__ = "data_drift"
+class FeatureDrift(Base):
+    __tablename__ = "feature_drift"
 
     id = Column(Integer, primary_key=True, index=True)
     project_id = Column(
@@ -374,35 +238,25 @@ class DataDrift(Base):
         nullable=False,
         index=True
     )
-    # batch_no = Column(Integer, nullable=True) # Optional batch number
 
-    baseline_window = Column(String, nullable=False)  # e.g., "rows 1–1000"
-    current_window = Column(String, nullable=False)   # e.g., "rows 1001–1500"
-    
-    # Source timestamps for traceability
+    baseline_window = Column(String, nullable=False)
+    current_window = Column(String, nullable=False)
     baseline_source_timestamp = Column(TIMESTAMP, nullable=True) 
     current_source_timestamp = Column(TIMESTAMP, nullable=True)
-
-    feature_stats = Column(JSON, nullable=False)     # Baseline + current feature stats (JSONB in PG, JSON in Base)
-    drift_tests = Column(JSON, nullable=False)       # All statistical test results
-    alerts = Column(JSON, nullable=False)            # List of features with drift
+    feature_stats = Column(JSON, nullable=False)
+    drift_tests = Column(JSON, nullable=False)
+    alerts = Column(JSON, nullable=False)
     overall_drift = Column(Boolean, nullable=False)
     drift_score = Column(Float, nullable=True)
-    
-    # LLM-generated interpretation and recommendations
-    llm_interpretation = Column(Text, nullable=True) # LLM analysis of drift results
-
+    llm_interpretation = Column(Text, nullable=True)
+    test_happened_at_time = Column(TIMESTAMP, server_default=func.now())
     created_at = Column(TIMESTAMP, server_default=func.now())
     
-    project = relationship("Project", back_populates="drift_snapshots")
+    project = relationship("Project", back_populates="feature_drifts")
     
     __table_args__ = (
-        Index("idx_drift_snapshot_project_time", "project_id", "created_at"),
+        Index("idx_feature_drift_project_time", "project_id", "test_happened_at_time"),
     )
-
-# Add relation to Project
-Project.drift_snapshots = relationship("DataDrift", back_populates="project", cascade="all, delete-orphan")
-
 
 class ModelBasedDrift(Base):
     __tablename__ = 'model_based_drift'
@@ -414,38 +268,191 @@ class ModelBasedDrift(Base):
         nullable=False,
         index=True
     )
-
-    drift_score = Column(Float, nullable=False)  # Model accuracy (higher = more drift)
+    drift_score = Column(Float, nullable=False)
     alert_triggered = Column(Boolean, default=False)
-    alert_threshold = Column(Float, nullable=False)  # Threshold used for this test
-    
+    alert_threshold = Column(Float, nullable=False)
     baseline_samples = Column(Integer, nullable=False)
     current_samples = Column(Integer, nullable=False)
-    
-    # Source timestamps
     baseline_source_timestamp = Column(TIMESTAMP, nullable=True) 
     current_source_timestamp = Column(TIMESTAMP, nullable=True)
-    
     model_type = Column(String(50), default="RandomForest")
     test_accuracy = Column(Float, nullable=False)
-    
     test_happened_at_time = Column(TIMESTAMP, server_default=func.now())
     
     project = relationship("Project", back_populates="model_drifts")
 
     __table_args__ = (
-        Index("idx_model_drift_project_time", "project_id", "test_happened_at_time"),
+        Index("idx_model_based_drift_project_time", "project_id", "test_happened_at_time"),
     )
 
-# Add relation to Project
-Project.model_drifts = relationship(
-    "ModelBasedDrift", 
-    back_populates="project",
-    cascade="all, delete-orphan"
-)
+class FeatureStats(Base):
+    __tablename__ = "feature_stats"
 
+    project_id = Column(
+        Integer,
+        ForeignKey("projects.project_id", ondelete="CASCADE"),
+        primary_key=True
+    )
+    latest_feature_start_row = Column(Integer, nullable=True)
+    latest_feature_end_row = Column(Integer, nullable=True)
+    latest_prediction_start_row = Column(Integer, nullable=True)
+    latest_prediction_end_row = Column(Integer, nullable=True)
+    total_batches = Column(Integer, default=0, nullable=False)
+    last_ingestion_at = Column(
+        TIMESTAMP, 
+        server_default=func.now(), 
+        onupdate=func.now()
+    )
 
-# ---------- PREDICTION MONITORING ----------
+    project = relationship("Project", back_populates="feature_stats")
+
+class FeatureQualityCheck(Base):
+    __tablename__ = "feature_quality_check"
+
+    id = Column(Integer, primary_key=True, index=True)
+    project_id = Column(
+        Integer,
+        ForeignKey("projects.project_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    batch_number = Column(Integer, nullable=False)
+    check_timestamp = Column(TIMESTAMP, server_default=func.now())
+    feature_start_row = Column(Integer, nullable=True)
+    feature_end_row = Column(Integer, nullable=True)
+    total_rows_checked = Column(Integer, default=0)
+    missing_values_summary = Column(JSON, nullable=True)
+    duplicate_percentage = Column(Float, default=0.0)
+    total_duplicate_rows = Column(Integer, default=0)
+    total_columns_checked = Column(Integer, default=0)
+    columns_with_missing = Column(Integer, default=0)
+    check_status = Column(String(50), default="completed")
+    error_message = Column(Text, nullable=True)
+    
+    project = relationship("Project", back_populates="feature_quality_checks")
+
+    __table_args__ = (
+        Index("idx_feature_quality_project_batch", "project_id", "batch_number"),
+    )
+
+class FeatureValidationParams(Base):
+    __tablename__ = "feature_validation_params"
+    __table_args__ = {"keep_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    project_id = Column(Integer, ForeignKey("projects.project_id", ondelete="CASCADE"), index=True)
+    len_columns = Column(Integer, nullable=False)
+    columns_type = Column(JSON, nullable=False)
+    created_at = Column(TIMESTAMP, server_default=func.now())
+    project = relationship("Project", back_populates="feature_validation_params")
+
+class FeatureValidation(Base):
+    __tablename__ = "feature_validation"
+    __table_args__ = {"keep_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    project_id = Column(Integer, ForeignKey("projects.project_id", ondelete="CASCADE"), index=True)
+    batch_number = Column(Integer, nullable=False)
+    len_columns_status = Column(Boolean, nullable=False)
+    columns_type_status = Column(Boolean, nullable=False)
+    validation_status = Column(Boolean, nullable=False)
+    created_at = Column(TIMESTAMP, server_default=func.now())
+    project = relationship("Project", back_populates="feature_validations")
+
+class FeatureBaseline(Base):
+    __tablename__ = "feature_baseline"
+
+    baseline_id = Column(Integer, primary_key=True, index=True)
+    project_id = Column(
+        Integer,
+        ForeignKey("projects.project_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    baseline_start_row_feature_input = Column(Integer, nullable=False)
+    baseline_end_row_feature_input = Column(Integer, nullable=False, default=1)
+    baseline_start_row_prediction_output = Column(Integer, nullable=False)
+    baseline_end_row_prediction_output = Column(Integer, nullable=False, default=1)
+    temp_baseline_batch_size = Column(Integer, nullable=False)
+    created_at = Column(TIMESTAMP, server_default=func.now())
+
+    project = relationship("Project", back_populates="feature_baselines")
+
+    __table_args__ = (
+        Index("idx_feature_baseline_project_created", "project_id", "created_at"),
+    )
+
+class FeatureMonitorInfo(Base):
+    __tablename__ = "feature_monitor_info"
+
+    project_id = Column(
+        Integer,
+        ForeignKey("projects.project_id", ondelete="CASCADE"),
+        primary_key=True
+    )
+    monitor_start_row_feature_input = Column(Integer, nullable=False)
+    monitor_end_row_feature_input = Column(Integer, nullable=False)
+
+    project = relationship("Project", back_populates="feature_monitor_info")
+
+# =============================================================================
+# PREDICTION MONITORING SDK
+# =============================================================================
+
+class PredictionOutput(Base):
+    __tablename__ = "prediction_output"
+
+    id = Column(Integer, primary_key=True, index=True)
+    project_id = Column(
+        Integer,
+        ForeignKey("projects.project_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    row_id = Column(Integer, nullable=False, index=True)
+    prediction = Column(JSON, nullable=True)
+    created_at = Column(TIMESTAMP, server_default=func.now())
+
+    project = relationship("Project", back_populates="prediction_outputs")
+
+    __table_args__ = (
+        Index("idx_prediction_output_project_id", "project_id"),
+    )
+
+class PredictionConfig(Base):
+    __tablename__ = "prediction_config"
+
+    project_id = Column(
+        Integer,
+        ForeignKey("projects.project_id", ondelete="CASCADE"),
+        primary_key=True
+    )
+    baseline_batch_size = Column(Integer, nullable=False, default=1000)
+    monitor_batch_size = Column(Integer, nullable=False, default=500)
+
+    project = relationship("Project", back_populates="prediction_config")
+
+class PredictionDriftConfig(Base):
+    __tablename__ = 'prediction_drift_config'
+
+    config_id = Column(Integer, primary_key=True, index=True)
+    project_id = Column(
+        Integer,
+        ForeignKey("projects.project_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+
+    mean_threshold = Column(Float, nullable=False, default=0.1)
+    median_threshold = Column(Float, nullable=False, default=0.1)
+    variance_threshold = Column(Float, nullable=False, default=0.2)
+    ks_pvalue_threshold = Column(Float, nullable=False, default=0.05)
+    psi_threshold = Column(JSON, nullable=False, default=[0.1, 0.25])
+    psi_bins = Column(Integer, nullable=False, default=10)
+    min_samples = Column(Integer, nullable=False, default=50)
+    alert_threshold = Column(Integer, nullable=False, default=2)
+    model_based_drift_threshold = Column(Float, nullable=False, default=0.50)
+    created_at = Column(TIMESTAMP, server_default=func.now())
 
 class PredictionMetrics(Base):
     __tablename__ = "prediction_metrics"
@@ -459,18 +466,14 @@ class PredictionMetrics(Base):
     )
     batch_number = Column(Integer, nullable=False)
     timestamp = Column(TIMESTAMP, server_default=func.now())
-    
-    # Combined metrics storage
-    metrics = Column(JSON, nullable=False)  # stores {accuracy: x, precision: y, ...}
-    
-    metadata_info = Column(JSON, nullable=True)  # user-provided metadata
+    metrics = Column(JSON, nullable=False)
+    metadata_info = Column(JSON, nullable=True)
     
     project = relationship("Project", back_populates="prediction_metrics")
 
     __table_args__ = (
-        Index("idx_pred_metrics_project_batch", "project_id", "batch_number"),
+        Index("idx_prediction_metrics_project_batch", "project_id", "batch_number"),
     )
-
 
 class PredictionDrift(Base):
     __tablename__ = "prediction_drift"
@@ -484,32 +487,26 @@ class PredictionDrift(Base):
     )
     batch_number = Column(Integer, nullable=False)
     timestamp = Column(TIMESTAMP, server_default=func.now())
-
-    # Window info
     baseline_window = Column(String, nullable=False)
     current_window = Column(String, nullable=False)
-
-    # Drift results
-    drift_results = Column(JSON, nullable=False)  # includes mean, median, variance, quantile drifts
+    drift_results = Column(JSON, nullable=False)
     ks_test = Column(JSON, nullable=False)
     psi = Column(JSON, nullable=False)
     alerts = Column(JSON, nullable=False)
     overall_drift = Column(Boolean, nullable=False, default=False)
-    
-    # LLM-generated interpretation and recommendations
-    llm_interpretation = Column(Text, nullable=True) # LLM analysis of prediction drift results
+    llm_interpretation = Column(Text, nullable=True)
     
     project = relationship("Project", back_populates="prediction_drifts")
 
     __table_args__ = (
-        Index("idx_pred_drift_project_batch", "project_id", "batch_number"),
+        Index("idx_prediction_drift_project_batch", "project_id", "batch_number"),
     )
 
-
-# ---------- LLM MONITORING ----------
+# =============================================================================
+# LLM MONITORING SDK
+# =============================================================================
 
 class LLMConfig(Base):
-    """Stores LLM monitoring configuration per project"""
     __tablename__ = "llm_config"
 
     project_id = Column(
@@ -520,24 +517,12 @@ class LLMConfig(Base):
     baseline_batch_size = Column(Integer, nullable=False, default=500)
     monitor_batch_size = Column(Integer, nullable=False, default=250)
     toxicity_threshold = Column(Float, nullable=False, default=0.5)
-    token_drift_threshold = Column(Float, nullable=False, default=0.15)  # 15% change triggers drift
-    
+    token_drift_threshold = Column(Float, nullable=False, default=0.15)
     created_at = Column(TIMESTAMP, server_default=func.now())
 
     project = relationship("Project", back_populates="llm_config")
 
-
-# Add back_populates in Project
-Project.llm_config = relationship(
-    "LLMConfig",
-    back_populates="project",
-    uselist=False,
-    cascade="all, delete-orphan"
-)
-
-
 class LLMMonitor(Base):
-    """Stores LLM interaction logs with toxicity and judge metrics"""
     __tablename__ = "llm_monitor"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -548,46 +533,25 @@ class LLMMonitor(Base):
         index=True
     )
     row_id = Column(Integer, nullable=False, index=True)
-    
-    # LLM Interaction data
     input_text = Column(Text, nullable=False)
     response_text = Column(Text, nullable=False)
-    
-    # Token analysis
     response_token_length = Column(Integer, nullable=False)
-    
-    # Toxicity analysis (full Detoxify results + boolean flag)
-    detoxify = Column(JSON, nullable=False)  # {toxicity, severe_toxicity, obscene, threat, insult, identity_attack}
+    detoxify = Column(JSON, nullable=False)
     is_toxic = Column(Boolean, nullable=False, default=False)
-    
-    # LLM Judge metrics
-    llm_judge_metrics = Column(JSON, nullable=True)  # {accuracy, completeness, clarity, relevance, logical_flow, creativity}
-    
-    # Drift flag
+    llm_judge_metrics = Column(JSON, nullable=True)
     has_drift = Column(Boolean, nullable=False, default=False)
-    
     created_at = Column(TIMESTAMP, server_default=func.now())
 
     project = relationship("Project", back_populates="llm_monitors")
 
     __table_args__ = (
-        Index("idx_llm_monitor_project", "project_id"),
-        Index("idx_llm_monitor_project_row", "project_id", "row_id"),
-        Index("idx_llm_monitor_created", "project_id", "created_at"),
+        Index("idx_llm_monitor_project_id", "project_id"),
+        Index("idx_llm_monitor_project_row_id", "project_id", "row_id"),
+        Index("idx_llm_monitor_project_created", "project_id", "created_at"),
     )
 
-
-# Add back_populates in Project
-Project.llm_monitors = relationship(
-    "LLMMonitor",
-    back_populates="project",
-    cascade="all, delete-orphan"
-)
-
-
-class LLMBaselineInfo(Base):
-    """Tracks baseline information for LLM monitoring"""
-    __tablename__ = "llm_baseline_info"
+class LLMBaseline(Base):
+    __tablename__ = "llm_baseline"
 
     baseline_id = Column(Integer, primary_key=True, index=True)
     project_id = Column(
@@ -598,28 +562,16 @@ class LLMBaselineInfo(Base):
     )
     baseline_start_row = Column(Integer, nullable=False)
     baseline_end_row = Column(Integer, nullable=False)
-    
     avg_response_token_length = Column(Float, nullable=False)
-    
     created_at = Column(TIMESTAMP, server_default=func.now())
 
     project = relationship("Project", back_populates="llm_baselines")
 
     __table_args__ = (
-        Index("idx_llm_baseline_project", "project_id"),
+        Index("idx_llm_baseline_project_id", "project_id"),
     )
 
-
-# Add back_populates in Project
-Project.llm_baselines = relationship(
-    "LLMBaselineInfo",
-    back_populates="project",
-    cascade="all, delete-orphan"
-)
-
-
 class LLMMonitorInfo(Base):
-    """Tracks current monitoring window for LLM"""
     __tablename__ = "llm_monitor_info"
 
     monitor_id = Column(Integer, primary_key=True, index=True)
@@ -631,28 +583,16 @@ class LLMMonitorInfo(Base):
     )
     monitor_start_row = Column(Integer, nullable=False)
     monitor_end_row = Column(Integer, nullable=False)
-    
     current_avg_token_length = Column(Float, nullable=True)
-    
     last_updated = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
 
     project = relationship("Project", back_populates="llm_monitor_infos")
 
     __table_args__ = (
-        Index("idx_llm_monitor_info_project", "project_id"),
+        Index("idx_llm_monitor_info_project_id", "project_id"),
     )
 
-
-# Add back_populates in Project
-Project.llm_monitor_infos = relationship(
-    "LLMMonitorInfo",
-    back_populates="project",
-    cascade="all, delete-orphan"
-)
-
-
 class LLMDrift(Base):
-    """Stores LLM response token length drift detection results"""
     __tablename__ = "llm_drift"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -662,32 +602,18 @@ class LLMDrift(Base):
         nullable=False,
         index=True
     )
-    
-    baseline_window = Column(String, nullable=False)  # e.g., "rows 1–500"
-    monitor_window = Column(String, nullable=False)   # e.g., "rows 501–750"
-    
+    baseline_window = Column(String, nullable=False)
+    monitor_window = Column(String, nullable=False)
     baseline_avg_tokens = Column(Float, nullable=False)
     monitor_avg_tokens = Column(Float, nullable=False)
-    
-    token_length_change = Column(Float, nullable=False)  # percentage change
+    token_length_change = Column(Float, nullable=False)
     has_drift = Column(Boolean, nullable=False, default=False)
-    
-    # LLM-generated interpretation
     drift_interpretation = Column(Text, nullable=True)
-    
     created_at = Column(TIMESTAMP, server_default=func.now())
 
     project = relationship("Project", back_populates="llm_drifts")
 
     __table_args__ = (
-        Index("idx_llm_drift_project", "project_id"),
-        Index("idx_llm_drift_created", "project_id", "created_at"),
+        Index("idx_llm_drift_project_id", "project_id"),
+        Index("idx_llm_drift_project_created", "project_id", "created_at"),
     )
-
-
-# Add back_populates in Project
-Project.llm_drifts = relationship(
-    "LLMDrift",
-    back_populates="project",
-    cascade="all, delete-orphan"
-)

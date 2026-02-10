@@ -5,8 +5,8 @@ from typing import List
 
 from app.database.connection import get_db
 from app.database import models
-from app.services.check_data_quality import DataQualityChecker
-from app.services.data_validation import DataValidation
+from app.services.feature_monitoring.check_data_quality import FeatureQualityChecker
+from app.services.feature_monitoring.data_validation import FeatureValidation
 
 router = APIRouter(
     prefix="/data-validation",
@@ -31,7 +31,7 @@ async def run_comprehensive_check(
             raise HTTPException(status_code=404, detail="Project not found")
 
         # 2. Setup Checker
-        checker = DataQualityChecker(project_id)
+        checker = FeatureQualityChecker(project_id)
         data = await checker.get_data_and_metadata()
         
         if not data or len(data.get('features', [])) == 0:
@@ -44,9 +44,9 @@ async def run_comprehensive_check(
         duplicate_result = await checker.check_duplicate_rows()
 
         # Store Quality Result
-        quality_check = models.DataQualityCheck(
+        quality_check = models.FeatureQualityCheck(
             project_id=project_id,
-            batch_number=batch_number,
+            batch_number=data.get('batch_number', 0),
             feature_start_row=data['feature_row_range'][0],
             feature_end_row=data['feature_row_range'][1],
             total_rows_checked=len(data['features']),
@@ -60,8 +60,8 @@ async def run_comprehensive_check(
         db.add(quality_check)
 
         # 4. Run Schema Validation
-        # The DataValidation service expects (features, project_id)
-        validator = DataValidation(data['features'], project_id)
+        # The FeatureValidation service expects (features, project_id)
+        validator = FeatureValidation(data['features'], project_id)
         validation_status = await validator.check_data_validation(batch_number)
 
         await db.commit()
@@ -91,9 +91,9 @@ async def get_latest_validation_status(
     Get the latest schema validation status.
     """
     result = await db.execute(
-        select(models.DataValidation)
-        .where(models.DataValidation.project_id == project_id)
-        .order_by(desc(models.DataValidation.created_at))
+        select(models.FeatureValidation)
+        .where(models.FeatureValidation.project_id == project_id)
+        .order_by(desc(models.FeatureValidation.created_at))
         .limit(1)
     )
     validation = result.scalar_one_or_none()

@@ -49,8 +49,8 @@ class LLMDriftDetector:
 
                 # 2. Fetch baseline info
                 baseline_result = await db.execute(
-                    select(models.LLMBaselineInfo).where(
-                        models.LLMBaselineInfo.project_id == self.project_id
+                    select(models.LLMBaseline).where(
+                        models.LLMBaseline.project_id == self.project_id
                     )
                 )
                 baseline_info = baseline_result.scalars().first()

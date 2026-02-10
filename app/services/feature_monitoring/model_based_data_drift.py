@@ -64,14 +64,14 @@ class ModelBasedDriftMonitor:
         self.results = None
 
     async def load_config(self):
-        """Load alert threshold from DataDriftConfig."""
+        """Load alert threshold from FeatureDriftConfig."""
         if self.alert_threshold is not None:
             return  # Already set
         
         async with AsyncSessionLocal() as db:
             result = await db.execute(
-                select(models.DataDriftConfig).where(
-                    models.DataDriftConfig.project_id == self.project_id
+                select(models.FeatureDriftConfig).where(
+                    models.FeatureDriftConfig.project_id == self.project_id
                 )
             )
             config = result.scalars().first()
@@ -140,7 +140,7 @@ class ModelBasedDriftMonitor:
 
         self.results = {
             "drift_score": float(accuracy),
-            "alert": alert,
+            "alert_triggered": alert,
             "alert_threshold": self.alert_threshold,
             "baseline_samples": len(self.baseline_data),
             "current_samples": len(self.current_data),
@@ -159,7 +159,7 @@ class ModelBasedDriftMonitor:
                 drift_record = models.ModelBasedDrift(
                     project_id=self.project_id,
                     drift_score=self.results["drift_score"],
-                    alert_triggered=self.results["alert"],
+                    alert_triggered=self.results["alert_triggered"],
                     alert_threshold=self.results["alert_threshold"],
                     baseline_samples=self.results["baseline_samples"],
                     current_samples=self.results["current_samples"],
@@ -176,7 +176,7 @@ class ModelBasedDriftMonitor:
                 print(f"  Drift Score: {self.results['drift_score']:.4f}")
                 print(f"  Alert Threshold: {self.results['alert_threshold']:.4f}")
                 
-                if self.results["alert"]:
+                if self.results["alert_triggered"]:
                     print(f"⚠ MODEL-BASED DRIFT ALERT: Accuracy {self.results['drift_score']:.4f} >= {self.results['alert_threshold']:.4f}")
                 else:
                     print(f"✓ No significant drift detected")

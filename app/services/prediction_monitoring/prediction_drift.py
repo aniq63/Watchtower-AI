@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Optional, Dict, Any
 from app.database import models
 from app.database.connection import AsyncSessionLocal
-from app.services.drift_llm_interpreter import interpret_prediction_drift
+from app.services.feature_monitoring.drift_llm_interpreter import interpret_prediction_drift
 
 class PredictionOutputMonitor:
     def __init__(

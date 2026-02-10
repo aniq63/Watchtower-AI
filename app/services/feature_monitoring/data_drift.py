@@ -1,15 +1,14 @@
 import numpy as np
 import pandas as pd
 from scipy.stats import ks_2samp
-from sqlalchemy import select
+from sqlalchemy import select, func
 from app.database import models
 from app.database.connection import AsyncSessionLocal
-from app.services.drift_llm_interpreter import interpret_data_drift
+from app.services.feature_monitoring.drift_llm_interpreter import interpret_data_drift
 from app.constants import (
     DRIFT_MEAN_THRESHOLD,
     DRIFT_MEDIAN_THRESHOLD,
     DRIFT_VARIANCE_THRESHOLD,
-    DRIFT_QUANTILE_THRESHOLD,
     DRIFT_KS_PVALUE_THRESHOLD,
     DRIFT_PSI_LOW_THRESHOLD,
     DRIFT_PSI_MEDIUM_THRESHOLD,
@@ -34,7 +33,6 @@ class InputDataDriftMonitor:
         mean_threshold=None,
         median_threshold=None,
         variance_threshold=None,
-        quantile_threshold=None,
         ks_pvalue_threshold=None,
         psi_thresholds=None,
         psi_bins=None,
@@ -68,7 +66,6 @@ class InputDataDriftMonitor:
         self.mean_threshold = mean_threshold
         self.median_threshold = median_threshold
         self.variance_threshold = variance_threshold
-        self.quantile_threshold = quantile_threshold
         self.ks_pvalue_threshold = ks_pvalue_threshold
         self.psi_thresholds = psi_thresholds
         self.psi_bins = psi_bins
@@ -88,8 +85,8 @@ class InputDataDriftMonitor:
         """Load drift detection configuration from database."""
         async with AsyncSessionLocal() as db:
             result = await db.execute(
-                select(models.DataDriftConfig).where(
-                    models.DataDriftConfig.project_id == self.project_id
+                select(models.FeatureDriftConfig).where(
+                    models.FeatureDriftConfig.project_id == self.project_id
                 )
             )
             config = result.scalars().first()
@@ -100,7 +97,6 @@ class InputDataDriftMonitor:
                 if self.mean_threshold is None: self.mean_threshold = DRIFT_MEAN_THRESHOLD
                 if self.median_threshold is None: self.median_threshold = DRIFT_MEDIAN_THRESHOLD
                 if self.variance_threshold is None: self.variance_threshold = DRIFT_VARIANCE_THRESHOLD
-                if self.quantile_threshold is None: self.quantile_threshold = DRIFT_QUANTILE_THRESHOLD
                 if self.ks_pvalue_threshold is None: self.ks_pvalue_threshold = DRIFT_KS_PVALUE_THRESHOLD
                 if self.psi_thresholds is None: self.psi_thresholds = (DRIFT_PSI_LOW_THRESHOLD, DRIFT_PSI_MEDIUM_THRESHOLD)
                 if self.psi_bins is None: self.psi_bins = DRIFT_PSI_BINS
@@ -112,7 +108,6 @@ class InputDataDriftMonitor:
             if self.mean_threshold is None: self.mean_threshold = config.mean_threshold
             if self.median_threshold is None: self.median_threshold = config.median_threshold
             if self.variance_threshold is None: self.variance_threshold = config.variance_threshold
-            if self.quantile_threshold is None: self.quantile_threshold = config.quantile_threshold
             if self.ks_pvalue_threshold is None: self.ks_pvalue_threshold = config.ks_pvalue_threshold
             if self.psi_thresholds is None: self.psi_thresholds = tuple(config.psi_threshold) if isinstance(config.psi_threshold, list) else (0.1, 0.25)
             if self.psi_bins is None: self.psi_bins = config.psi_bins
@@ -226,18 +221,6 @@ class InputDataDriftMonitor:
                 "drift_detected": bool(var_rc > self.variance_threshold)
             }
             if var_rc > self.variance_threshold: alerts_count += 1
-
-        # 4. Quantile Drift
-        b_q = base_clean.quantile(0.95) # Default to 95th percentile
-        c_q = curr_clean.quantile(0.95)
-        q_rc = self._relative_change(c_q, b_q)
-        if q_rc is not None:
-            tests["quantile_shift"] = {
-                "value": float(q_rc),
-                "threshold": self.quantile_threshold,
-                "drift_detected": bool(q_rc > self.quantile_threshold)
-            }
-            if q_rc > self.quantile_threshold: alerts_count += 1
             
         # 3. KS Test
         try:
@@ -325,7 +308,7 @@ class InputDataDriftMonitor:
         # Store in database
         async with AsyncSessionLocal() as db:
             try:
-                snapshot = models.DataDrift(
+                snapshot = models.FeatureDrift(
                     project_id=self.project_id,
                     baseline_window=self.baseline_window,
                     current_window=self.current_window,
@@ -336,7 +319,8 @@ class InputDataDriftMonitor:
                     alerts=self.snapshot_data["alerts"],
                     overall_drift=self.snapshot_data["overall_drift"],
                     drift_score=self.snapshot_data["drift_score"],
-                    llm_interpretation=llm_msg
+                    llm_interpretation=llm_msg,
+                    test_happened_at_time=func.now()
                 )
                 db.add(snapshot)
                 await db.commit()

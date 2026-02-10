@@ -4,7 +4,7 @@ from app.database import models
 from app.database.connection import AsyncSessionLocal
 
 
-class DataValidation:
+class FeatureValidation:
     """
     Validates incoming data batches against stored schema parameters.
     Ensures data consistency and schema compliance for each ingestion.
@@ -24,7 +24,7 @@ class DataValidation:
     async def check_data_validation(self, batch_number: int):
         """
         Validate the current batch against stored parameters.
-        Stores the result in DataValidation table.
+        Stores the result in FeatureValidation table.
         
         Args:
             batch_number: Current batch number for tracking
@@ -46,8 +46,8 @@ class DataValidation:
         async with AsyncSessionLocal() as db:
             try:
                 result = await db.execute(
-                    select(models.DataValidationParameters)
-                    .where(models.DataValidationParameters.project_id == self.project_id)
+                    select(models.FeatureValidationParams)
+                    .where(models.FeatureValidationParams.project_id == self.project_id)
                 )
                 params = result.scalars().first()
                 
@@ -79,7 +79,7 @@ class DataValidation:
                 validation_status = len_columns_status and columns_type_status
                 
                 # 3. Store Result
-                validation_result = models.DataValidation(
+                validation_result = models.FeatureValidation(
                     project_id=self.project_id,
                     batch_number=batch_number,
                     len_columns_status=len_columns_status,

@@ -7,14 +7,14 @@ import pandas as pd
 
 from app.database.connection import get_db
 from app.database.models import (
-    DataDrift, 
+    FeatureDrift, 
     ModelBasedDrift, 
-    DataDriftConfig,
+    FeatureDriftConfig,
     Project
 )
-from app.services.data_drift import InputDataDriftMonitor
-from app.services.model_based_data_drift import ModelBasedDriftMonitor
-from app.services.baseline_manager import BaselineManager
+from app.services.feature_monitoring.data_drift import InputDataDriftMonitor
+from app.services.feature_monitoring.model_based_data_drift import ModelBasedDriftMonitor
+from app.services.feature_monitoring.baseline_manager import BaselineManager
 
 router = APIRouter(
     prefix="/drift-detection",
@@ -107,9 +107,9 @@ async def get_statistical_drift_results(
     Get latest statistical drift detection results for a project.
     """
     result = await db.execute(
-        select(DataDrift)
-        .where(DataDrift.project_id == project_id)
-        .order_by(desc(DataDrift.test_happened_at_time))
+        select(FeatureDrift)
+        .where(FeatureDrift.project_id == project_id)
+        .order_by(desc(FeatureDrift.test_happened_at_time))
         .limit(limit)
     )
     drift_records = result.scalars().all()
@@ -125,12 +125,12 @@ async def get_statistical_drift_results(
         "project_id": project_id,
         "results": [
             {
-                "drift_id": record.drift_id,
-                "test_name": record.test_name,
-                "test_values": record.test_value_per_column,
-                "alert_triggered": record.alert_triggered,
-                "alert_severity": record.alert_severity,
-                "alerted_columns": record.alerted_columns,
+                "id": record.id,
+                "baseline_window": record.baseline_window,
+                "current_window": record.current_window,
+                "overall_drift": record.overall_drift,
+                "drift_score": record.drift_score,
+                "alerts": record.alerts,
                 "timestamp": record.test_happened_at_time
             }
             for record in drift_records
@@ -191,9 +191,9 @@ async def get_drift_summary(
     """
     # Get latest statistical drift
     stat_result = await db.execute(
-        select(DataDrift)
-        .where(DataDrift.project_id == project_id)
-        .order_by(desc(DataDrift.test_happened_at_time))
+        select(FeatureDrift)
+        .where(FeatureDrift.project_id == project_id)
+        .order_by(desc(FeatureDrift.test_happened_at_time))
         .limit(1)
     )
     latest_stat = stat_result.scalar_one_or_none()
@@ -211,9 +211,9 @@ async def get_drift_summary(
         "project_id": project_id,
         "statistical_drift": {
             "available": latest_stat is not None,
-            "alert_triggered": latest_stat.alert_triggered if latest_stat else False,
-            "alert_severity": latest_stat.alert_severity if latest_stat else None,
-            "alerted_columns": latest_stat.alerted_columns if latest_stat else [],
+            "overall_drift": latest_stat.overall_drift if latest_stat else False,
+            "drift_score": latest_stat.drift_score if latest_stat else 0.0,
+            "alerted_features": latest_stat.alerts if latest_stat else [],
             "timestamp": latest_stat.test_happened_at_time if latest_stat else None
         },
         "model_based_drift": {
@@ -235,7 +235,7 @@ async def get_drift_config(
     Get drift detection configuration for a project.
     """
     result = await db.execute(
-        select(DataDriftConfig).where(DataDriftConfig.project_id == project_id)
+        select(FeatureDriftConfig).where(FeatureDriftConfig.project_id == project_id)
     )
     config = result.scalar_one_or_none()
     
@@ -247,7 +247,6 @@ async def get_drift_config(
         "mean_threshold": config.mean_threshold,
         "median_threshold": config.median_threshold,
         "variance_threshold": config.variance_threshold,
-        "quantile_threshold": config.quantile_threshold,
         "ks_pvalue_threshold": config.ks_pvalue_threshold,
         "psi_threshold": config.psi_threshold,
         "psi_bins": config.psi_bins,

@@ -1,8 +1,3 @@
-"""
-Application-wide constants and configuration defaults.
-Centralizes magic numbers and configuration values used across the application.
-"""
-
 # ============ DATA INGESTION DEFAULTS ============
 DEFAULT_BASELINE_BATCH_SIZE = 1000  # Rows to use for baseline
 DEFAULT_MONITOR_BATCH_SIZE = 500    # Rows to use for monitoring window
@@ -13,7 +8,6 @@ DEFAULT_INGESTION_STAGE = "model_input"
 DRIFT_MEAN_THRESHOLD = 0.1          # 10% relative change
 DRIFT_MEDIAN_THRESHOLD = 0.1        # 10% relative change
 DRIFT_VARIANCE_THRESHOLD = 0.2      # 20% relative change
-DRIFT_QUANTILE_THRESHOLD = 0.2      # 20% relative change
 
 # KS Test threshold
 DRIFT_KS_PVALUE_THRESHOLD = 0.05    # p-value threshold for statistical significance

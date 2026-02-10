@@ -59,7 +59,7 @@ def generate_session_token() -> str:
 
 
 async def get_current_user(
-    session_token: Optional[str] = Header(None),
+    session_token: Optional[str] = Header(None, alias="session_token"),
     db: AsyncSession = Depends(get_db)
 ) -> Company:
     """
@@ -123,6 +123,43 @@ async def get_current_user_from_query(
         )
     
     return user
+
+
+async def verify_api_key(
+    api_key: Optional[str] = Header(None, alias="X-API-Key"),
+    db: AsyncSession = Depends(get_db)
+) -> int:
+    """
+    Dependency to verify API key and return company_id.
+    
+    Args:
+        api_key: API key from header
+        db: Database session
+        
+    Returns:
+        Company ID
+        
+    Raises:
+        HTTPException: If API key is missing or invalid
+    """
+    if not api_key:
+        raise HTTPException(
+            status_code=401,
+            detail="API key is missing. Please provide X-API-Key header."
+        )
+    
+    result = await db.execute(
+        select(Company).where(Company.api_key == api_key)
+    )
+    company = result.scalar_one_or_none()
+    
+    if not company:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid API key"
+        )
+    
+    return company.company_id
 
 
 async def get_current_project(

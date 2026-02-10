@@ -30,21 +30,22 @@ class StoreDataValidation:
         columns_type = {col: str(dtype) for col, dtype in df.dtypes.items()}
 
         async with AsyncSessionLocal() as db:
-            # Check if validation parameters already exist for this project
+            # Check if validation record for project already exists
             result = await db.execute(
-                select(models.DataValidationParameters)
-                .where(models.DataValidationParameters.project_id == self.project_id)
+                select(models.FeatureValidationParams)
+                .where(models.FeatureValidationParams.project_id == self.project_id)
             )
-            existing = result.scalars().first()
-
-            if existing:
-                return False  # Already stored
-
-            # Create new validation parameters record
-            validation_record = models.DataValidationParameters(
+            validation_record = result.scalars().first()
+            
+            if validation_record:
+                return False # Record exists, return False as per original logic
+            
+            # If not exists create one
+            
+            validation_record = models.FeatureValidationParams(
                 project_id=self.project_id,
-                len_columns=len_columns,
-                columns_type=columns_type,
+                len_columns=len_columns, # Using original variable name
+                columns_type=columns_type # Using original variable name
             )
 
             db.add(validation_record)

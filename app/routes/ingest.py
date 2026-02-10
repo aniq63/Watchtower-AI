@@ -6,7 +6,7 @@ from datetime import datetime
 
 from app.database.connection import get_db
 from app.database import models
-from app.services.ingestion_service import IngestionService
+from app.services.feature_monitoring.ingestion_service import IngestionService
 
 router = APIRouter(tags=["Ingest"])
 
@@ -77,9 +77,9 @@ async def ingest_data(
             raise HTTPException(status_code=404, detail="Project not found")
 
     # Validate stage against project config
-    from app.database.models import ProjectConfig
+    from app.database.models import FeatureConfig
     config_result = await db.execute(
-        select(ProjectConfig).where(ProjectConfig.project_id == project.project_id)
+        select(FeatureConfig).where(FeatureConfig.project_id == project.project_id)
     )
     project_config = config_result.scalar_one_or_none()
     

@@ -5,13 +5,14 @@ import numpy as np
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from datetime import datetime
-from app.database.models import FeatureInput, ProjectDataStats, DataQualityCheck
-from app.services.store_data_for_validation import StoreDataValidation
-from app.services.data_validation import DataValidation
-from app.services.baseline_manager import BaselineManager
-from app.services.check_data_quality import DataQualityChecker
-from app.services.data_drift import InputDataDriftMonitor
-from app.services.model_based_data_drift import ModelBasedDriftMonitor
+from app.database import models
+from app.database.models import FeatureInput, FeatureStats, FeatureQualityCheck
+from app.services.feature_monitoring.store_data_for_validation import StoreDataValidation
+from app.services.feature_monitoring.data_validation import FeatureValidation
+from app.services.feature_monitoring.baseline_manager import BaselineManager
+from app.services.feature_monitoring.check_data_quality import FeatureQualityChecker
+from app.services.feature_monitoring.data_drift import InputDataDriftMonitor
+from app.services.feature_monitoring.model_based_data_drift import ModelBasedDriftMonitor
 from app.database.connection import AsyncSessionLocal
 
 class IngestionService:
@@ -59,12 +60,12 @@ class IngestionService:
         
         
         # Fetch existing stats or create new
-        stmt = select(ProjectDataStats).where(ProjectDataStats.project_id == project_id)
+        stmt = select(FeatureStats).where(FeatureStats.project_id == project_id)
         result = await self.db.execute(stmt)
         stats = result.scalar_one_or_none()
         
         if not stats:
-            stats = ProjectDataStats(
+            stats = FeatureStats(
                 project_id=project_id,
                 total_batches=0,
                 last_ingestion_at=event_time
@@ -78,48 +79,52 @@ class IngestionService:
         if feat_start is not None:
             stats.latest_feature_start_row = feat_start
             stats.latest_feature_end_row = feat_end
-            
+            # Increment batch counter in FeatureStats
+        
+        # Also increment batch counter in Project table
+        project_result = await self.db.execute(
+            select(models.Project).where(models.Project.project_id == project_id)
+        )
+        project = project_result.scalars().first()
+        if project:
+            project.total_batches += 1
+        
+        await self.db.commit()
 
 
         # ----------------------- Data Validation -----------------
-        # 1. Store/Ensure Validation Parameters Exist
-        store_val = StoreDataValidation(project_id=project_id)
-        await store_val.store_validation_data(features=features)
-        
-        # 2. Run Validation for this Batch
-        validator = DataValidation(features=features, project_id=project_id)
+        # Ensure validation params exist (create if not exists)
+        store_validation = StoreDataValidation(project_id=project_id)
+        await store_validation.store_validation_data(features)
+
+        # ----------------------- Data Check -----------------
+        validator = FeatureValidation(features=features, project_id=project_id)
         await validator.check_data_validation(batch_number=stats.total_batches)
 
+
         # ----------------------- Baseline Creation -----------------
-        # Create or update baseline after validation
+        # Create baseline ONCE (if not already exists)
         baseline_mgr = BaselineManager(project_id=project_id)
         baseline_created = await baseline_mgr.create_baseline()
         
-        # Retrieve baseline data for future drift detection
-        baseline_data = await baseline_mgr.get_baseline_data()
-        if baseline_data:
-            print(f"✓ Baseline data retrieved for project {project_id}")
-            print(f"  Feature baseline: {len(baseline_data['feature_data'])} rows")
-            print(f"  Prediction baseline: {len(baseline_data['prediction_data'])} rows")
+        # Update monitor window to slide forward (if baseline exists)
+        if baseline_created:
+            await baseline_mgr.update_monitor_window()
         
-        # Retrieve monitor data for drift detection
+        # Retrieve baseline and monitor data for drift detection
+        baseline_data = await baseline_mgr.get_baseline_data()
         monitor_data = await baseline_mgr.get_monitor_data()
-        if monitor_data:
-            print(f"✓ Monitor data retrieved for project {project_id}")
-            print(f"  Monitor window: rows {monitor_data['feature_range'][0]} to {monitor_data['feature_range'][1]}")
-            print(f"  Monitor data: {monitor_data['total_rows']} rows")
 
         # ----------------------- Drift Detection -----------------
         # Run drift detection if both baseline and monitor data are available
         if baseline_data and monitor_data:
-            try:
-                # Convert to pandas DataFrames
+            print(f"\n🔍 DRIFT DETECTION (Batch {stats.total_batches})")
+            try:    # Convert to pandas DataFrames
                 baseline_df = pd.DataFrame(baseline_data['feature_data'])
                 monitor_df = pd.DataFrame(monitor_data['feature_data'])
                 
                 # Check if we have enough data
                 if len(baseline_df) > 0 and len(monitor_df) > 0:
-                    print(f"✓ Running drift detection...")
                     
                     # Prepare metadata for snapshots
                     batch_no = stats.total_batches
@@ -146,7 +151,7 @@ class IngestionService:
                         baseline_timestamp=base_ts,
                         current_timestamp=curr_ts
                     )
-                    stat_results = await stat_drift_monitor.run()
+                    await stat_drift_monitor.run()
                     
                     # 2. Model-Based Drift Detection
                     model_drift_monitor = ModelBasedDriftMonitor(
@@ -156,19 +161,31 @@ class IngestionService:
                         baseline_timestamp=base_ts,
                         current_timestamp=curr_ts
                     )
-                    model_results = await model_drift_monitor.run()
+                    model_based_results = await model_drift_monitor.run()
+                    
+                    drift_score = model_based_results['drift_score']
+                    threshold = model_based_results['alert_threshold']
+                    
+                    if model_based_results['alert_triggered']:
+                        print(f"   ⚠️  Model drift detected (score: {drift_score:.3f}, threshold: {threshold:.3f})")
+                    else:
+                        print(f"   ✓ No model drift detected (score: {drift_score:.3f}, threshold: {threshold:.3f})")
                     
                     print(f"✓ Drift detection completed")
                 else:
-                    print(f"⚠ Insufficient data for drift detection")
+                    print(f"   ⚠ Insufficient data for drift detection")
                     
             except Exception as e:
-                print(f"⚠ Drift detection failed: {str(e)}")
+                print(f"   ❌ Drift detection failed: {str(e)}")
                 # Don't fail ingestion if drift detection fails
         else:
-            print(f"⚠ Baseline or monitor data not available, skipping drift detection")
+            pass  # Skip drift detection if baseline/monitor not ready
 
         await self.db.commit()
+
+        # ---------------  Data Quality Check --------------
+        # Run quality check in background
+        print(f"\n✅ Batch {stats.total_batches} complete\n" + "="*60)
 
 
         # ---------------  Data Quality Check --------------
@@ -182,7 +199,7 @@ class IngestionService:
                 while retry_count < max_retries:
                     try:
                         # Run quality check
-                        checker = DataQualityChecker(project_id)
+                        checker = FeatureQualityChecker(project_id)
                         
                         # Get metadata first to get batch info
                         metadata = await checker.get_data_and_metadata()
@@ -192,7 +209,7 @@ class IngestionService:
                         duplicate_result = await checker.check_duplicate_rows()
                     
                         async with AsyncSessionLocal() as bg_db:
-                            quality_check = DataQualityCheck(
+                            quality_check = FeatureQualityCheck(
                                 project_id=project_id,
                                 batch_number=metadata['batch_number'],
                                 feature_start_row=metadata['feature_row_range'][0],
@@ -220,7 +237,7 @@ class IngestionService:
                             # Store failed check on final failure
                             try:
                                 async with AsyncSessionLocal() as bg_db:
-                                    failed_check = DataQualityCheck(
+                                    failed_check = FeatureQualityCheck(
                                         project_id=project_id,
                                         batch_number=stats.total_batches if stats else 0,
                                         check_status="failed",
@@ -277,18 +294,27 @@ class IngestionService:
             self.db.add(pred_row)
 
         # 2. Update Project Data Stats
-        stmt = select(models.ProjectDataStats).where(models.ProjectDataStats.project_id == project_id)
+        stmt = select(models.FeatureStats).where(models.FeatureStats.project_id == project_id)
         result = await self.db.execute(stmt)
         stats = result.scalar_one_or_none()
         
         if not stats:
-            stats = models.ProjectDataStats(project_id=project_id, total_batches=0, last_ingestion_at=event_time)
+            stats = models.FeatureStats(project_id=project_id, total_batches=0, last_ingestion_at=event_time)
             self.db.add(stats)
         
         stats.total_batches += 1
         stats.last_ingestion_at = event_time
         stats.latest_prediction_start_row = max_row_id + 1
         stats.latest_prediction_end_row = current_row_id
+        
+        # Also increment batch counter in Project table
+        project_result = await self.db.execute(
+            select(models.Project).where(models.Project.project_id == project_id)
+        )
+        project = project_result.scalars().first()
+        if project:
+            project.total_batches += 1
+
 
         # 3. Store provided metrics
         if metrics:
@@ -315,7 +341,7 @@ class IngestionService:
             baseline_preds = baseline_data['prediction_data']
             
             if len(baseline_preds) > 0 and len(predictions) > 0:
-                from app.services.prediction_drift import PredictionOutputMonitor
+                from app.services.prediction_monitoring.prediction_drift import PredictionOutputMonitor
                 
                 # Run Drift Detection
                 monitor = PredictionOutputMonitor(

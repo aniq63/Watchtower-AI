@@ -3,7 +3,7 @@ import numpy as np
 import asyncio
 from app.utils.fetch_data import ProjectDataFetcher
 
-class DataQualityChecker:
+class FeatureQualityChecker:
     """Main class for running data quality checks"""
     
     def __init__(self, project_id):

@@ -2,15 +2,29 @@
 Watchtower AI - Data Drift & Quality Monitoring API
 Main FastAPI application entry point
 """
-from fastapi import FastAPI
-from app.routes import auth, get_api, projects, ingest, data_quality, data_validation, drift_detection, llm_monitoring
-from app.database.connection import init_db
-from app.services.llm_model_init import initialize_llm_models
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from pathlib import Path
+from app.routes import auth, get_api, projects, ingest, data_quality, data_validation, drift_detection, llm_monitoring, statistics, project_stats
+from app.database.connection import init_db, close_db
+from app.services.llm_monitoring.llm_model_init import initialize_llm_models
 
 app = FastAPI(
     title="Watchtower AI API",
     description="Advanced data drift detection and quality monitoring system",
     version="1.0.0"
+)
+
+# Add CORS middleware for frontend integration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, replace with specific origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 @app.on_event("startup")
@@ -19,6 +33,22 @@ async def startup_event():
     await init_db()
     # Preload expensive LLM models in background to avoid blocking startup
     initialize_llm_models(background=True)
+
+@app.on_event("startup")
+async def startup_debugger():
+    """Log registered routes on startup."""
+    print("\n" + "="*60)
+    print("Registered Routes:")
+    print("="*60)
+    for route in app.routes:
+        methods = ','.join(route.methods) if hasattr(route, 'methods') else 'N/A'
+        print(f"  {route.path:<40} [{methods}]")
+    print("="*60 + "\n")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Clean up resources on shutdown."""
+    await close_db()
 
 # Include routers
 app.include_router(auth.router)
@@ -29,36 +59,65 @@ app.include_router(data_quality.router)
 app.include_router(data_validation.router)
 app.include_router(drift_detection.router)
 app.include_router(llm_monitoring.router)
+app.include_router(statistics.router)
+app.include_router(project_stats.router)
 
-@app.on_event("startup")
-async def startup_debugger():
-    """Log registered routes on startup."""
-    print("\n" + "="*60)
-    print("Registered Routes:")
-    print("="*60)
-    for route in app.routes:
-        methods = ','.join(route.methods) if hasattr(route, 'methods') else 'N/A'
-        print(f"  {route.path:<40} [{methods}]")
-    print("="*60 + "\n")
-
-@app.get("/", tags=["Health"])
-async def root():
-    """Health check endpoint."""
+@app.get("/api/health", tags=["Health"])
+async def health_check():
+    """Health check endpoint for API."""
     return {"message": "Watchtower AI API is running", "status": "healthy"}
 
+# Configure Jinja2 templates
+frontend_path = Path(__file__).parent / "frontend"
+templates = Jinja2Templates(directory=str(frontend_path / "templates"))
 
-@app.on_event("startup")
-async def startup_debugger():
-    """Log registered routes on startup."""
-    print("\n" + "="*60)
-    print("Registered Routes:")
-    print("="*60)
-    for route in app.routes:
-        methods = ','.join(route.methods) if hasattr(route, 'methods') else 'N/A'
-        print(f"  {route.path:<40} [{methods}]")
-    print("="*60 + "\n")
+# Mount static files (CSS, JS, assets)
+if frontend_path.exists():
+    app.mount("/static", StaticFiles(directory=str(frontend_path / "static")), name="static")
 
-@app.get("/", tags=["Health"])
-async def root():
-    """Health check endpoint."""
-    return {"message": "Watchtower AI API is running", "status": "healthy"}
+# Frontend Routes
+@app.get("/", response_class=HTMLResponse, tags=["Frontend"])
+async def landing_page(request: Request):
+    """Serve the landing page."""
+    return templates.TemplateResponse("landing.html", {"request": request})
+
+@app.get("/dashboard", response_class=HTMLResponse, tags=["Frontend"])
+async def dashboard(request: Request):
+    """Serve the user dashboard (requires authentication)."""
+    return templates.TemplateResponse("dashboard.html", {"request": request})
+
+@app.get("/project/{project_id}", response_class=HTMLResponse, tags=["Frontend"])
+async def project_detail(request: Request, project_id: int):
+    """Serve the project detail dashboard."""
+    return templates.TemplateResponse("project_detail.html", {
+        "request": request,
+        "project_id": project_id
+    })
+
+@app.get("/project/{project_id}/drift/{drift_id}", response_class=HTMLResponse, tags=["Frontend"])
+async def drift_detail(request: Request, project_id: int, drift_id: int):
+    """Serve the drift run detail page."""
+    return templates.TemplateResponse("drift_detail.html", {
+        "request": request,
+        "project_id": project_id,
+        "drift_id": drift_id
+    })
+
+@app.get("/project/{project_id}/quality/{check_id}", response_class=HTMLResponse, tags=["Frontend"])
+async def quality_detail(request: Request, project_id: int, check_id: int):
+    """Serve the quality check detail page."""
+    return templates.TemplateResponse("quality_detail.html", {
+        "request": request,
+        "project_id": project_id,
+        "check_id": check_id
+    })
+
+@app.get("/project/{project_id}/llm/{query_id}", response_class=HTMLResponse, tags=["Frontend"])
+async def llm_detail(request: Request, project_id: int, query_id: int):
+    """Serve the LLM query detail page."""
+    return templates.TemplateResponse("llm_detail.html", {
+        "request": request,
+        "project_id": project_id,
+        "query_id": query_id
+    })
+

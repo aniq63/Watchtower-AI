@@ -2,7 +2,7 @@ import asyncio
 import pandas as pd
 from sqlalchemy import select
 from app.database import models
-from app.database.connection import get_db
+from app.database.connection import get_db, AsyncSessionLocal
 
 
 class ProjectDataFetcher:
@@ -15,24 +15,28 @@ class ProjectDataFetcher:
         self.project_id = project_id
 
     async def fetch_data_stats(self):
-        """Fetch latest feature/prediction row ranges from ProjectDataStats"""
-        async for db in get_db():
-            result = await db.execute(
-                select(models.ProjectDataStats).where(
-                    models.ProjectDataStats.project_id == self.project_id
+        """Fetch latest feature/prediction row ranges from FeatureStats"""
+        async with AsyncSessionLocal() as db:
+            try:
+                result = await db.execute(
+                    select(models.FeatureStats).where(
+                        models.FeatureStats.project_id == self.project_id
+                    )
                 )
-            )
-            stats_row = result.scalars().first()
-            if not stats_row:
+                stats_row = result.scalars().first()
+                if not stats_row:
+                    return None
+                return {
+                    'latest_feature_start_row': stats_row.latest_feature_start_row,
+                    'latest_feature_end_row': stats_row.latest_feature_end_row,
+                    'latest_prediction_start_row': stats_row.latest_prediction_start_row,
+                    'latest_prediction_end_row': stats_row.latest_prediction_end_row,
+                    'total_batches': stats_row.total_batches,
+                    'last_ingestion_at': stats_row.last_ingestion_at
+                }
+            except Exception as e:
+                print(f"Error fetching feature stats: {e}")
                 return None
-            return {
-                'latest_feature_start_row': stats_row.latest_feature_start_row,
-                'latest_feature_end_row': stats_row.latest_feature_end_row,
-                'latest_prediction_start_row': stats_row.latest_prediction_start_row,
-                'latest_prediction_end_row': stats_row.latest_prediction_end_row,
-                'total_batches': stats_row.total_batches,
-                'last_ingestion_at': stats_row.last_ingestion_at
-            }
 
     async def fetch_feature_input(self) -> pd.DataFrame:
         """Fetch feature input data as a DataFrame"""

@@ -9,7 +9,7 @@ from datetime import datetime
 from app.database import models
 from app.database.connection import get_db
 from app.database.schemas import ProjectResponse
-from app.services.llm_monitor_service import LLMMonitorService
+from app.services.llm_monitoring.llm_monitor_service import LLMMonitorService
 from app.utils.auth import verify_api_key
 
 router = APIRouter(prefix="/ingest", tags=["llm_monitoring"])
@@ -115,6 +115,47 @@ async def ingest_llm_interaction(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to ingest LLM interaction: {str(e)}"
         )
+
+
+@router.get("/llm/interactions/{project_id}")
+async def get_llm_interactions(
+    project_id: int,
+    limit: int = 50,
+    offset: int = 0,
+    db: AsyncSession = Depends(get_db),
+    company_id: int = Depends(verify_api_key)
+):
+    """Get recent LLM interactions."""
+    # Verify project ownership
+    result = await db.execute(
+        select(models.Project).where(
+            models.Project.project_id == project_id,
+            models.Project.company_id == company_id
+        )
+    )
+    project = result.scalar_one_or_none()
+    
+    if not project:
+        raise HTTPException(
+            status_code=404,
+            detail="Project not found"
+        )
+        
+    # Get interactions
+    result = await db.execute(
+        select(models.LLMMonitor)
+        .where(models.LLMMonitor.project_id == project_id)
+        .order_by(models.LLMMonitor.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+    )
+    interactions = result.scalars().all()
+    
+    return {
+        "project_id": project_id,
+        "interactions": interactions,
+        "count": len(interactions)
+    }
 
 
 @router.get("/llm/drift/{project_id}")
@@ -223,8 +264,8 @@ async def get_llm_baseline_info(
 
         # Get baseline info
         baseline_result = await db.execute(
-            select(models.LLMBaselineInfo).where(
-                models.LLMBaselineInfo.project_id == project_id
+            select(models.LLMBaseline).where(
+                models.LLMBaseline.project_id == project_id
             )
         )
         baseline = baseline_result.scalars().first()

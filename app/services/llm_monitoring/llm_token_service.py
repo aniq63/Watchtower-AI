@@ -2,7 +2,7 @@
 LLM Token Service - Handles tokenization and token counting
 Uses cached models from llm_model_init for efficient loading
 """
-from app.services.llm_model_init import get_cached_tokenizer
+from app.services.llm_monitoring.llm_model_init import get_cached_tokenizer
 
 
 class LLMTokenizer:
