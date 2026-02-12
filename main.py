@@ -8,14 +8,30 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
+from contextlib import asynccontextmanager
+from app.database.connection import init_db
 from app.routes import auth, get_api, projects, ingest, data_quality, data_validation, drift_detection, llm_monitoring, statistics, project_stats, feature_monitoring, prediction_monitoring
 
 # ... imports ...
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Lifespan events for the FastAPI application.
+    Handles startup and shutdown logic.
+    """
+    # Startup: Initialize database tables
+    await init_db()
+    yield
+    # Shutdown: Clean up resources if needed
+
+
 app = FastAPI(
     title="Watchtower AI API",
     description="Advanced data drift detection and quality monitoring system",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # ... middleware ...
