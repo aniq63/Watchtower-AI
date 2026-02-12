@@ -170,7 +170,7 @@ class LLMDriftDetector:
             str: LLM interpretation
         """
         try:
-            llm = ChatGroq(model_name="mixtral-8x7b-32768")
+            llm = ChatGroq(model_name="openai/gpt-oss-20b")
             parser = StrOutputParser()
 
             prompt = f"""Analyze this LLM response token length drift:

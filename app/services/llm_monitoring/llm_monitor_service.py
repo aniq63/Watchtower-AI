@@ -69,8 +69,7 @@ class LLMMonitorService:
                     response_token_length=response_token_length,
                     detoxify=toxicity_result,
                     is_toxic=is_toxic,
-                    llm_judge_metrics=judge_metrics,
-                    has_drift=False
+                    llm_judge_metrics=judge_metrics
                 )
 
                 db.add(llm_record)
@@ -127,6 +126,9 @@ class LLMMonitorService:
             #     'identity_attack': 0.xxx
             # }
 
+            # Convert numpy floats to native python floats
+            results = {k: float(v) for k, v in results.items()}
+            
             is_toxic = results.get('toxicity', 0) > 0.5
 
             return results, is_toxic
@@ -154,7 +156,13 @@ class LLMMonitorService:
             dict: Judge metrics {accuracy, completeness, clarity, relevance, logical_flow, creativity}
         """
         try:
-            llm = ChatGroq(model_name="mixtral-8x7b-32768")
+            from app.config import get_settings
+            settings = get_settings()
+            
+            llm = ChatGroq(
+                model_name="openai/gpt-oss-20b",
+                api_key=settings.groq_api_key
+            )
             parser = JsonOutputParser()
 
             prompt_template = """You are a judge for AI-generated responses.
@@ -281,41 +289,13 @@ Response: {response_text}
                 detector = LLMDriftDetector(project_id)
                 drift_result = await detector.detect_drift()
 
-                if drift_result.get("has_drift"):
-                    print(f"✓ DRIFT DETECTED: {drift_result['change_percentage']}% change")
-
-                    # Mark records in this window as having drift
-                    await self._mark_drift_records(
-                        db, project_id,
-                        monitor_info.monitor_start_row,
-                        monitor_info.monitor_end_row
-                    )
+                print(f"✓ DRIFT DETECTED: {drift_result['change_percentage']}% change")
 
                 # Update monitor window for next batch
                 await self._update_monitor_window(db, project_id, monitor_info)
 
         except Exception as e:
             print(f"Error checking drift trigger: {e}")
-
-    async def _mark_drift_records(self, db, project_id: int, start_row: int, end_row: int):
-        """Mark records that experienced drift."""
-        try:
-            result = await db.execute(
-                select(models.LLMMonitor).where(
-                    models.LLMMonitor.project_id == project_id,
-                    models.LLMMonitor.row_id.between(start_row, end_row)
-                )
-            )
-            records = result.scalars().all()
-
-            for record in records:
-                record.has_drift = True
-
-            await db.commit()
-            print(f"✓ Marked {len(records)} records with drift")
-
-        except Exception as e:
-            print(f"Error marking drift records: {e}")
 
     async def _update_monitor_window(self, db, project_id: int, monitor_info):
         """Move monitor window to next batch."""

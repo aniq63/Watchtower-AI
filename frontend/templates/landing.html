@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Watchtower AI - ML Monitoring Platform{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <h1 class="hero-title">
+            Monitor Your ML Models
+            <span class="gradient-text">In Real-Time</span>
+        </h1>
+        <p class="hero-description">
+            A robust monitoring framework designed to track model performance, data drift, and system health in
+            production.
+            Get actionable insights through an integrated dashboard for data-driven decisions on model retraining and
+            maintenance.
+        </p>
+        <div class="hero-buttons">
+            <button class="btn btn-primary btn-lg" onclick="openAuthModal('signup')">
+                Get Started Free
+            </button>
+            <button class="btn btn-outline btn-lg" onclick="openAuthModal('signin')">
+                Sign In
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features">
+    <div class="container">
+        <h2 class="section-title">What Problems We Solve</h2>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <h3>Data Drift Detection</h3>
+                <p>Identify when production data deviates from training data using statistical and model-based tests.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M9 11l3 3L22 4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <h3>Data Quality Monitoring</h3>
+                <p>Detect missing values, duplicates, and schema violations before they impact your models.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <h3>Model Performance Tracking</h3>
+                <p>Monitor prediction quality and model behavior over time with comprehensive metrics.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <h3>LLM Response Monitoring</h3>
+                <p>Track toxicity, response quality, and token usage for your LLM applications.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M12 9v4M12 17h.01" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <h3>Real-Time Alerting</h3>
+                <p>Get actionable insights when models need retraining or when critical issues arise.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M3 3v18h18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M18 17V9M13 17v-6M8 17v-3" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <h3>Comprehensive Analytics</h3>
+                <p>Visualize trends, analyze patterns, and make data-driven decisions with ease.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="how-it-works">
+    <div class="container">
+        <h2 class="section-title">How It Works</h2>
+
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>Create a Project</h3>
+                <p>Set up a monitoring project for your ML model or LLM application</p>
+            </div>
+
+            <div class="step-arrow">→</div>
+
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>Integrate SDK</h3>
+                <p>Install our Python SDK and start logging your data with just a few lines of code</p>
+            </div>
+
+            <div class="step-arrow">→</div>
+
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>Monitor & Alert</h3>
+                <p>Get real-time insights and alerts when drift or quality issues are detected</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta">
+    <div class="cta-content">
+        <h2>Ready to Monitor Your Models?</h2>
+        <p>Join teams using Watchtower AI to keep their ML systems healthy</p>
+        <button class="btn btn-primary btn-lg" onclick="openAuthModal('signup')">
+            Start Monitoring Now
+        </button>
+    </div>
+</section>
+{% endblock %}

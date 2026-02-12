@@ -8,17 +8,18 @@ class HTTPClient:
     Handles authentication and error management.
     """
     
-    def __init__(self, api_key: str, endpoint: str):
+    def __init__(self, api_key: str, endpoint: str, timeout: int = 30):
         """
         Initialize HTTP client.
         
         Args:
             api_key: API key for authentication
             endpoint: Base URL for the API
+            timeout: Request timeout in seconds (default: 30)
         """
         self.api_key = api_key
         self.endpoint = endpoint
-        self.timeout = 30  # seconds
+        self.timeout = timeout
 
     def post(self, path: str, payload: dict) -> dict:
         """

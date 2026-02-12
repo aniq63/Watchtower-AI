@@ -1,0 +1,242 @@
+/* ===== Quality Detail Page Styles ===== */
+
+.quality-detail-page {
+    padding: 2rem 0 4rem;
+    min-height: calc(100vh - 200px);
+}
+
+/* ===== Page Header ===== */
+.page-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid var(--background);
+}
+
+.page-header h1 {
+    font-size: 2.25rem;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+}
+
+.page-header p {
+    color: var(--text-light);
+    font-size: 1.1rem;
+}
+
+/* ===== Overview Cards ===== */
+.overview-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.overview-card {
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    transition: all 0.3s ease;
+}
+
+.overview-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px var(--shadow-lg);
+}
+
+.card-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.card-icon svg {
+    width: 28px;
+    height: 28px;
+    stroke: white;
+}
+
+.icon-rows {
+    background: linear-gradient(135deg, #3b82f6, #60a5fa);
+}
+
+.icon-columns {
+    background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+}
+
+.icon-missing {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+}
+
+.icon-duplicates {
+    background: linear-gradient(135deg, #ef4444, #f87171);
+}
+
+.card-content h3 {
+    font-size: 1.75rem;
+    color: var(--primary);
+    margin: 0 0 0.25rem 0;
+}
+
+.card-content p {
+    color: var(--text-light);
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* ===== Detail Sections ===== */
+.detail-section {
+    background: var(--white);
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px var(--shadow);
+    margin-bottom: 2rem;
+}
+
+.detail-section h2 {
+    color: var(--primary);
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.section-description {
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+}
+
+/* ===== Duplicate Info ===== */
+.duplicate-info {
+    display: flex;
+    gap: 3rem;
+    flex-wrap: wrap;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.info-label {
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.info-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+/* ===== Detail Table ===== */
+.table-container {
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid #E0E0E0;
+}
+
+.detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--white);
+}
+
+.detail-table thead {
+    background: var(--background);
+}
+
+.detail-table th {
+    padding: 1rem 1.25rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-dark);
+    border-bottom: 2px solid #E0E0E0;
+}
+
+.detail-table td {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #F5F5F5;
+    color: var(--text-dark);
+}
+
+.detail-table tbody tr:hover {
+    background: var(--background);
+}
+
+.detail-table tbody tr.row-warning {
+    background: #FFF8E1;
+}
+
+.detail-table tbody tr.row-warning:hover {
+    background: #FFECB3;
+}
+
+/* ===== Status Badges ===== */
+.status-badge {
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.status-pass {
+    background: #E8F5E9;
+    color: #2E7D32;
+}
+
+.status-warning {
+    background: #FFF3E0;
+    color: #E65100;
+}
+
+.status-fail {
+    background: #FFEBEE;
+    color: #C62828;
+}
+
+/* ===== Empty/Loading/Error States ===== */
+.loading-cell,
+.empty-cell,
+.error-cell {
+    text-align: center;
+    padding: 3rem !important;
+    color: var(--text-light);
+}
+
+.error-cell {
+    color: #F44336;
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 768px) {
+    .overview-cards {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .page-header h1 {
+        font-size: 1.75rem;
+    }
+
+    .detail-section {
+        padding: 1.5rem;
+    }
+
+    .duplicate-info {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .overview-cards {
+        grid-template-columns: 1fr;
+    }
+}

@@ -12,7 +12,7 @@ class WatchtowerLLMMonitor:
     Logs input/response pairs and sends them to Watchtower backend for analysis.
     """
 
-    def __init__(self, api_key: str, project_name: str, endpoint: str = "http://localhost:8000"):
+    def __init__(self, api_key: str, project_name: str, endpoint: str = "http://localhost:8000", timeout: int = 60):
         """
         Initialize the LLM Monitor.
         
@@ -20,11 +20,12 @@ class WatchtowerLLMMonitor:
             api_key: API key for authentication
             project_name: Name of the project
             endpoint: Base URL of Watchtower API (default: localhost:8000)
+            timeout: Request timeout in seconds (default: 60)
         """
         self.api_key = api_key
         self.project_name = project_name
         self.endpoint = endpoint.rstrip("/")
-        self.client = HTTPClient(api_key=self.api_key, endpoint=self.endpoint)
+        self.client = HTTPClient(api_key=self.api_key, endpoint=self.endpoint, timeout=timeout)
 
     def log_interaction(
         self,
@@ -61,7 +62,7 @@ class WatchtowerLLMMonitor:
         }
 
         try:
-            response = self.client.post("/ingest/llm", payload)
+            response = self.client.post("/llm/ingest", payload)
             return response
         except Exception as e:
             raise WatchtowerSDKError(f"Failed to log LLM interaction: {e}")

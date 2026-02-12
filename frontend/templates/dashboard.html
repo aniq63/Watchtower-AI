@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Watchtower AI{% endblock %}
+
+{% block auth_buttons %}
+<div class="user-menu">
+    <span class="user-name" id="header-user-name">Loading...</span>
+    <button class="btn btn-outline" onclick="handleLogout()">Logout</button>
+</div>
+{% endblock %}
+
+{% block content %}
+<section class="dashboard">
+    <div class="container">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <div>
+                <h1>Dashboard</h1>
+                <p id="welcome-message">Loading...</p>
+            </div>
+        </div>
+
+        <!-- API Key Section -->
+        <div class="api-key-section">
+            <div class="api-key-card">
+                <div class="api-key-header">
+                    <div>
+                        <h2>API Key</h2>
+                        <p>Use this key to authenticate your SDK requests</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="generateApiKey()" id="generate-api-btn">
+                        Generate API Key
+                    </button>
+                </div>
+
+                <div id="api-key-display" class="api-key-display" style="display: none;">
+                    <div class="api-key-value">
+                        <code id="api-key-text">Loading...</code>
+                        <button class="btn-icon" onclick="copyApiKey()" title="Copy to clipboard">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke-width="2" />
+                                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke-width="2" />
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="api-key-hint">Keep this key secure. Don't share it publicly.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects Section -->
+        <div class="projects-section">
+            <div class="projects-header">
+                <h2>Your Projects</h2>
+                <button class="btn btn-primary" onclick="openCreateProjectModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        style="width: 20px; height: 20px; margin-right: 8px;">
+                        <line x1="12" y1="5" x2="12" y2="19" stroke-width="2" stroke-linecap="round" />
+                        <line x1="5" y1="12" x2="19" y2="12" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                    Create New Project
+                </button>
+            </div>
+
+            <div id="projects-grid" class="projects-grid">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <p>Loading projects...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Create Project Modal -->
+<div id="createProjectModal" class="modal">
+    <div class="modal-overlay" onclick="closeCreateProjectModal()"></div>
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeCreateProjectModal()">&times;</button>
+
+        <div class="auth-form">
+            <h2 class="auth-title">Create New Project</h2>
+            <p class="auth-subtitle">Start monitoring your ML model</p>
+
+            <form onsubmit="handleCreateProject(event)">
+                <div class="form-group">
+                    <label for="project-name">Project Name</label>
+                    <input type="text" id="project-name" name="project_name" required
+                        placeholder="e.g., Cat Classification Model">
+                </div>
+
+                <div class="form-group">
+                    <label for="project-description">Description</label>
+                    <textarea id="project-description" name="project_description" required
+                        placeholder="Describe what this project monitors..." rows="4"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="project-type">Project Type</label>
+                    <select id="project-type" name="project_type" class="form-select">
+                        <option value="feature_monitoring" selected>Feature Monitoring</option>
+                        <option value="llm_monitoring">LLM Monitoring</option>
+                        <option value="prediction_monitoring">Prediction Monitoring</option>
+                    </select>
+                </div>
+
+                <div id="create-project-error" class="error-message"></div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    Create Project
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/dashboard.js"></script>
+<script src="/static/js/projects.js"></script>
+{% endblock %}

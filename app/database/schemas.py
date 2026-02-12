@@ -193,3 +193,35 @@ class LLMDriftResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
+class PredictionDriftConfigCreate(BaseModel):
+    """Schema for prediction drift configuration."""
+    mean_threshold: float = 0.1
+    median_threshold: float = 0.1
+    variance_threshold: float = 0.2
+    ks_pvalue_threshold: float = 0.05
+    psi_threshold: List[float] = [0.1, 0.25]
+    psi_bins: int = 10
+    min_samples: int = 50
+    alert_threshold: int = 2
+    model_based_drift_threshold: float = 0.50
+
+
+class PredictionEvaluationConfigCreate(BaseModel):
+    """Schema for prediction evaluation configuration."""
+    metric_thresholds: dict = {}
+    min_samples: int = 50
+
+
+class LLMDriftConfigCreate(BaseModel):
+    """Schema for LLM drift configuration."""
+    token_drift_threshold: float = 0.15
+    embedding_drift_threshold: float = 0.2
+
+
+class LLMEvaluationConfigCreate(BaseModel):
+    """Schema for LLM evaluation configuration."""
+    toxicity_threshold: float = 0.5
+    hallucination_threshold: float = 0.5
+    relevance_threshold: float = 0.7
+

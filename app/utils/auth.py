@@ -127,13 +127,16 @@ async def get_current_user_from_query(
 
 async def verify_api_key(
     api_key: Optional[str] = Header(None, alias="X-API-Key"),
+    authorization: Optional[str] = Header(None, alias="Authorization"),
     db: AsyncSession = Depends(get_db)
 ) -> int:
     """
     Dependency to verify API key and return company_id.
+    Supports both X-API-Key and Authorization: Bearer <key> headers.
     
     Args:
-        api_key: API key from header
+        api_key: API key from X-API-Key header
+        authorization: Bearer token from Authorization header
         db: Database session
         
     Returns:
@@ -142,14 +145,19 @@ async def verify_api_key(
     Raises:
         HTTPException: If API key is missing or invalid
     """
-    if not api_key:
+    token = api_key
+    
+    if not token and authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ")[1]
+
+    if not token:
         raise HTTPException(
             status_code=401,
-            detail="API key is missing. Please provide X-API-Key header."
+            detail="API key is missing. Please provide X-API-Key or Authorization: Bearer header."
         )
     
     result = await db.execute(
-        select(Company).where(Company.api_key == api_key)
+        select(Company).where(Company.api_key == token)
     )
     company = result.scalar_one_or_none()
     

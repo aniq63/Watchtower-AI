@@ -1,0 +1,575 @@
+{% extends "base.html" %}
+
+{% block title %}Project Dashboard - Watchtower AI{% endblock %}
+
+{% block auth_buttons %}
+<div class="user-menu">
+    <a href="/dashboard" class="btn btn-outline btn-sm">← Back to Dashboard</a>
+    <button class="btn btn-outline" onclick="handleLogout()">Logout</button>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/project_detail.css">
+{% endblock %}
+
+{% block content %}
+<section class="project-detail">
+    <div class="container">
+        <!-- Project Header -->
+        <div class="project-header-section">
+            <div class="project-info">
+                <h1 id="project-name">Loading...</h1>
+                <p id="project-description">Loading project details...</p>
+                <div class="project-badges">
+                    <span class="badge badge-status" id="project-status">Active</span>
+                    <span class="badge badge-updated" id="last-updated">Last updated: --</span>
+                </div>
+            </div>
+            <div class="project-actions">
+                <button class="btn btn-outline" onclick="openConfigTab()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        style="width: 18px; height: 18px; margin-right: 6px;">
+                        <circle cx="12" cy="12" r="3" stroke-width="2" />
+                        <path d="M12 1v6m0 6v6M1 12h6m6 0h6" stroke-width="2" />
+                    </svg>
+                    Settings
+                </button>
+            </div>
+        </div>
+
+        <!-- Overview Stats Cards -->
+        <div class="overview-stats">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-data">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M12 2v20M2 12h20" stroke-width="2" />
+                        <circle cx="12" cy="12" r="10" stroke-width="2" />
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <h3 id="total-data-points">0</h3>
+                    <p>Total Data Points</p>
+                </div>
+            </div>
+
+            <div class="stat-card" id="card-drift">
+                <div class="stat-icon stat-icon-drift">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <h3 id="drift-runs-count">0</h3>
+                    <p>Drift Runs</p>
+                </div>
+            </div>
+
+            <div class="stat-card" id="card-quality">
+                <div class="stat-icon stat-icon-quality">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M9 11l3 3L22 4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <h3 id="quality-runs-count">0</h3>
+                    <p>Quality Runs</p>
+                </div>
+            </div>
+
+            <div class="stat-card" id="card-llm">
+                <div class="stat-icon stat-icon-llm">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <h3 id="llm-queries">0</h3>
+                    <p>LLM Queries</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="tabs-container">
+            <div class="tabs-nav">
+                <button class="tab-btn active" data-tab="drift" onclick="switchTab('drift')" id="btn-tab-drift">
+                    Data Drift
+                </button>
+                <button class="tab-btn" data-tab="quality" onclick="switchTab('quality')" id="btn-tab-quality">
+                    Data Quality
+                </button>
+                <button class="tab-btn" data-tab="validation" onclick="switchTab('validation')" id="btn-tab-validation">
+                    Data Validation
+                </button>
+                <button class="tab-btn" data-tab="llm" onclick="switchTab('llm')" id="btn-tab-llm">
+                    LLM Monitoring
+                </button>
+                <button class="tab-btn" data-tab="prediction" onclick="switchTab('prediction')" id="btn-tab-prediction"
+                    style="display: none;">
+                    Prediction Monitoring
+                </button>
+                <button class="tab-btn" data-tab="config" onclick="switchTab('config')">
+                    Configuration
+                </button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tabs-content">
+                <!-- Data Drift Tab -->
+                <div id="drift-tab" class="tab-pane active">
+                    <div class="tab-header">
+                        <h2>Drift Detection Runs</h2>
+                        <p>View all drift detection runs. Click "View Details" to see feature-level test results.</p>
+                    </div>
+
+                    <div class="data-table-container">
+                        <table class="data-table" id="drift-runs-table">
+                            <thead>
+                                <tr>
+                                    <th>Run ID</th>
+                                    <th>Baseline Window</th>
+                                    <th>Current Window</th>
+                                    <th>Overall Status</th>
+                                    <th>Drift Score</th>
+                                    <th>Features Alerted</th>
+                                    <th>Timestamp</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="drift-runs-body">
+                                <tr>
+                                    <td colspan="8" class="loading-cell">
+                                        <div class="spinner"></div>
+                                        Loading drift runs...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Data Quality Tab -->
+                <div id="quality-tab" class="tab-pane">
+                    <div class="tab-header">
+                        <h2>Data Quality Check Runs</h2>
+                        <p>View all quality check batches. Click "View Details" to see column-level missing values and
+                            duplicates.</p>
+                    </div>
+
+                    <div class="data-table-container">
+                        <table class="data-table" id="quality-runs-table">
+                            <thead>
+                                <tr>
+                                    <th>Batch #</th>
+                                    <th>Rows Checked</th>
+                                    <th>Total Columns</th>
+                                    <th>Columns w/ Missing</th>
+                                    <th>Duplicate %</th>
+                                    <th>Status</th>
+                                    <th>Timestamp</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="quality-runs-body">
+                                <tr>
+                                    <td colspan="8" class="loading-cell">
+                                        <div class="spinner"></div>
+                                        Loading quality runs...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Data Validation Tab -->
+                <div id="validation-tab" class="tab-pane">
+                    <div class="tab-header">
+                        <h2>Schema Validation History</h2>
+                        <p>View history of schema validation checks (column types, nulls, etc).</p>
+                    </div>
+
+                    <div class="data-table-container">
+                        <table class="data-table" id="validation-history-table">
+                            <thead>
+                                <tr>
+                                    <th>Batch #</th>
+                                    <th>Status</th>
+                                    <th>Column Check</th>
+                                    <th>Type Check</th>
+                                    <th>Null Check</th>
+                                    <th>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="validation-history-body">
+                                <tr>
+                                    <td colspan="6" class="loading-cell">
+                                        <div class="spinner"></div>
+                                        Loading validation history...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Prediction Monitoring Tab -->
+                <div id="prediction-tab" class="tab-pane">
+                    <div class="tab-header">
+                        <h2>Prediction Monitoring</h2>
+                        <p>Monitor prediction drift and evaluation metrics.</p>
+                    </div>
+
+                    <div class="data-table-container">
+                        <h3>Prediction Drift</h3>
+                        <table class="data-table" id="prediction-drift-table">
+                            <thead>
+                                <tr>
+                                    <th>Run ID</th>
+                                    <th>Window</th>
+                                    <th>Drift Status</th>
+                                    <th>Timestamp</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="prediction-drift-body">
+                                <tr>
+                                    <td colspan="5" class="loading-cell">
+                                        <div class="spinner"></div>
+                                        Loading prediction drift...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="data-table-container" style="margin-top: 20px;">
+                        <h3>Evaluation Metrics</h3>
+                        <table class="data-table" id="prediction-eval-table">
+                            <thead>
+                                <tr>
+                                    <th>Batch #</th>
+                                    <th>metrics</th>
+                                    <th>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="prediction-eval-body">
+                                <tr>
+                                    <td colspan="3" class="loading-cell">
+                                        <div class="spinner"></div>
+                                        Loading evaluation metrics...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- LLM Monitoring Tab -->
+                <div id="llm-tab" class="tab-pane">
+                    <div class="tab-header">
+                        <h2>LLM Response Monitoring</h2>
+                        <p>Toxicity detection and quality analysis for LLM outputs</p>
+                    </div>
+
+                    <div class="llm-metrics-cards">
+                        <div class="summary-card">
+                            <h4>Total Queries</h4>
+                            <p class="summary-value" id="total-queries-metric">0</p>
+                        </div>
+                        <div class="summary-card">
+                            <h4>Avg Toxicity</h4>
+                            <p class="summary-value" id="avg-toxicity">0.00</p>
+                        </div>
+                        <div class="summary-card">
+                            <h4>Toxic Responses</h4>
+                            <p class="summary-value error" id="toxic-count">0</p>
+                        </div>
+                    </div>
+
+                    <!-- LLM Drift History -->
+                    <div class="data-table-container" style="margin-bottom: 2rem;">
+                        <h3>LLM Drift History</h3>
+                        <table class="data-table" id="llm-drift-table">
+                            <thead>
+                                <tr>
+                                    <th>Drift ID</th>
+                                    <th>Token Length Change</th>
+                                    <th>Baseline Avg</th>
+                                    <th>Monitor Avg</th>
+                                    <th>Status</th>
+                                    <th>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="llm-drift-body">
+                                <tr>
+                                    <td colspan="5" class="loading-cell">
+                                        <div class="spinner"></div>
+                                        Loading drift history...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="data-table-container">
+                        <h3>LLM Query Results</h3>
+                        <p class="tab-description">Click "View Details" to see full detoxify scores and judge metrics.
+                        </p>
+                        <table class="data-table" id="llm-queries-table">
+                            <thead>
+                                <tr>
+                                    <th>Query ID</th>
+                                    <th>Input Text</th>
+                                    <th>Response Text</th>
+                                    <th>Toxicity Score</th>
+                                    <th>Is Toxic</th>
+                                    <th>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="llm-queries-body">
+                                <tr>
+                                    <td colspan="7" class="loading-cell">
+                                        <div class="spinner"></div>
+                                        Loading LLM queries...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Configuration Tab -->
+                <div id="config-tab" class="tab-pane">
+                    <div class="tab-header">
+                        <h2>Project Configuration</h2>
+                        <p>Manage project settings and access credentials</p>
+                    </div>
+
+                    <div class="config-section">
+                        <h3>Project Details</h3>
+                        <div class="form-group">
+                            <label>Project Name</label>
+                            <input type="text" id="config-project-name" class="form-input" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Project Description</label>
+                            <textarea id="config-project-description" class="form-input" rows="3" readonly></textarea>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h3>Access Token</h3>
+                        <p class="config-hint">Use this token to authenticate SDK requests for this project</p>
+                        <div class="token-display-config">
+                            <code id="config-access-token">Loading...</code>
+                            <button class="btn-icon" onclick="copyConfigToken()" title="Copy token">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke-width="2" />
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke-width="2" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Feature Monitoring Config -->
+                    <div class="config-section" id="section-feature-config">
+                        <h3>Feature Monitoring Configuration</h3>
+                        <p class="config-hint">Configure batch sizes and monitoring stage.</p>
+                        <div class="threshold-grid">
+                            <div class="form-group">
+                                <label>Baseline Batch Size</label>
+                                <input type="number" id="config-feature-baseline-batch" class="form-input" value="1000"
+                                    min="10">
+                                <small>Number of samples for baseline calculation</small>
+                            </div>
+                            <div class="form-group">
+                                <label>Monitor Batch Size</label>
+                                <input type="number" id="config-feature-monitor-batch" class="form-input" value="500"
+                                    min="10">
+                                <small>Number of samples per monitoring window</small>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" onclick="saveFeatureConfig()">Save Feature
+                                Configuration</button>
+                            <span id="feature-config-save-status" class="save-status"></span>
+                        </div>
+                    </div>
+
+                    <!-- Drift Detection Thresholds -->
+                    <div class="config-section" id="section-drift-config">
+                        <h3>Drift Detection Thresholds</h3>
+                        <p class="config-hint">Configure thresholds for statistical drift tests. Lower values = more
+                            sensitive detection.</p>
+
+                        <div class="threshold-grid">
+                            <div class="form-group">
+                                <label>Mean Threshold</label>
+                                <input type="number" id="config-mean-threshold" class="form-input" step="0.01" min="0"
+                                    max="1" placeholder="0.1">
+                                <small>Relative change threshold for mean shift (default: 0.1)</small>
+                            </div>
+                            <div class="form-group">
+                                <label>Median Threshold</label>
+                                <input type="number" id="config-median-threshold" class="form-input" step="0.01" min="0"
+                                    max="1" placeholder="0.1">
+                                <small>Relative change threshold for median shift (default: 0.1)</small>
+                            </div>
+                            <div class="form-group">
+                                <label>Variance Threshold</label>
+                                <input type="number" id="config-variance-threshold" class="form-input" step="0.01"
+                                    min="0" max="1" placeholder="0.2">
+                                <small>Relative change threshold for variance shift (default: 0.2)</small>
+                            </div>
+                            <div class="form-group">
+                                <label>KS P-Value Threshold</label>
+                                <input type="number" id="config-ks-threshold" class="form-input" step="0.01" min="0"
+                                    max="1" placeholder="0.05">
+                                <small>P-value threshold for KS test (default: 0.05)</small>
+                            </div>
+                            <div class="form-group">
+                                <label>Alert Threshold</label>
+                                <input type="number" id="config-alert-threshold" class="form-input" step="1" min="1"
+                                    max="10" placeholder="2">
+                                <small>Number of test failures to trigger alert (default: 2)</small>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" onclick="saveDriftConfig()">Save Configuration</button>
+                            <span id="config-save-status" class="save-status"></span>
+                        </div>
+                    </div>
+
+                    <!-- LLM Monitoring Config -->
+                    <div class="config-section" id="section-llm-config" style="display: none;">
+                        <h3>LLM Monitoring Configuration</h3>
+                        <p class="config-hint">Configure thresholds for LLM monitoring.</p>
+                        <div class="threshold-grid">
+                            <div class="form-group">
+                                <label for="config-llm-baseline-batch">Baseline Batch Size</label>
+                                <input type="number" id="config-llm-baseline-batch" class="form-input" value="500"
+                                    min="10">
+                                <small>Number of interactions for baseline calculation</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="config-llm-monitor-batch">Monitor Batch Size</label>
+                                <input type="number" id="config-llm-monitor-batch" class="form-input" value="250"
+                                    min="10">
+                                <small>Number of interactions per monitoring window</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="config-llm-toxicity">Toxicity Threshold</label>
+                                <input type="number" id="config-llm-toxicity" class="form-input" value="0.5" step="0.01"
+                                    min="0" max="1">
+                                <small>Score above which text is considered toxic (0.0 - 1.0)</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="config-llm-token-drift">Token Drift Threshold</label>
+                                <input type="number" id="config-llm-token-drift" class="form-input" value="0.15"
+                                    step="0.01" min="0">
+                                <small>Max allowed deviation in token length vs baseline</small>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" onclick="saveLLMConfig()">Save LLM Configuration</button>
+                            <span id="llm-config-save-status" class="save-status"></span>
+                        </div>
+                    </div>
+
+                    <!-- Prediction Monitoring Config -->
+                    <div class="config-section" id="section-prediction-config" style="display: none;">
+                        <h3>Prediction Monitoring Configuration</h3>
+                        <p class="config-hint">Configure thresholds for prediction monitoring.</p>
+                        <div class="threshold-grid">
+                            <div class="form-group">
+                                <label for="config-pred-baseline-batch">Baseline Batch Size</label>
+                                <input type="number" id="config-pred-baseline-batch" class="form-input" value="1000"
+                                    min="10">
+                                <small>Number of predictions for baseline calculation</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="config-pred-monitor-batch">Monitor Batch Size</label>
+                                <input type="number" id="config-pred-monitor-batch" class="form-input" value="500"
+                                    min="10">
+                                <small>Number of predictions per monitoring window</small>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" onclick="savePredictionConfig()">Save Prediction
+                                Configuration</button>
+                            <span id="prediction-config-save-status" class="save-status"></span>
+                        </div>
+                    </div>
+
+                    <!-- Prediction Drift Config -->
+                    <div class="config-section" id="section-prediction-drift-config" style="display: none;">
+                        <h3>Prediction Drift Thresholds</h3>
+                        <p class="config-hint">Configure thresholds for prediction drift tests.</p>
+                        <div class="threshold-grid">
+                            <div class="form-group">
+                                <label>Mean Threshold</label>
+                                <input type="number" id="config-pred-mean-threshold" class="form-input" step="0.01"
+                                    min="0" max="1" placeholder="0.1">
+                                <small>Relative change threshold for mean shift</small>
+                            </div>
+                            <div class="form-group">
+                                <label>Median Threshold</label>
+                                <input type="number" id="config-pred-median-threshold" class="form-input" step="0.01"
+                                    min="0" max="1" placeholder="0.1">
+                                <small>Relative change threshold for median shift</small>
+                            </div>
+                            <div class="form-group">
+                                <label>Variance Threshold</label>
+                                <input type="number" id="config-pred-variance-threshold" class="form-input" step="0.01"
+                                    min="0" max="1" placeholder="0.2">
+                                <small>Relative change threshold for variance shift</small>
+                            </div>
+                            <div class="form-group">
+                                <label>KS P-Value Threshold</label>
+                                <input type="number" id="config-pred-ks-threshold" class="form-input" step="0.01"
+                                    min="0" max="1" placeholder="0.05">
+                                <small>P-value threshold for KS test</small>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" onclick="savePredictionDriftConfig()">Save Drift
+                                Configuration</button>
+                            <span id="prediction-drift-save-status" class="save-status"></span>
+                        </div>
+                    </div>
+
+                    <!-- Danger Zone -->
+                    <div class="config-section danger-zone">
+                        <h3>Danger Zone</h3>
+                        <p class="config-hint">Actions here are permanent and cannot be undone.</p>
+                        <div class="danger-actions">
+                            <div class="danger-item">
+                                <div class="danger-text">
+                                    <strong>Delete this project</strong>
+                                    <p>Once you delete a project, there is no going back. Please be certain.</p>
+                                </div>
+                                <button class="btn btn-danger" onclick="deleteCurrentProject()">Delete Project</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Hidden project ID for JavaScript -->
+<input type="hidden" id="project-id" value="{{ project_id }}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/static/js/project_detail.js"></script>
+{% endblock %}

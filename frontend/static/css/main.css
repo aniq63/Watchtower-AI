@@ -1,0 +1,406 @@
+/* ===== CSS Variables ===== */
+:root {
+    --primary: #576A8F;
+    --secondary: #B7BDF7;
+    --background: #FFF8DE;
+    --accent: #FF7444;
+    --text-dark: #2C3E50;
+    --text-light: #6C757D;
+    --white: #FFFFFF;
+    --shadow: rgba(87, 106, 143, 0.1);
+    --shadow-lg: rgba(87, 106, 143, 0.2);
+}
+
+/* ===== Global Styles ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: var(--background);
+    color: var(--text-dark);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+/* ===== Navigation Bar ===== */
+.navbar {
+    background: var(--white);
+    box-shadow: 0 2px 10px var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.logo-icon {
+    width: 32px;
+    height: 32px;
+    color: var(--accent);
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.nav-link {
+    color: var(--text-dark);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-link:hover {
+    color: var(--accent);
+}
+
+.github-icon {
+    width: 20px;
+    height: 20px;
+}
+
+/* ===== Buttons ===== */
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent), #FF8C66);
+    color: var(--white);
+    box-shadow: 0 4px 15px rgba(255, 116, 68, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 116, 68, 0.4);
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+}
+
+.btn-outline:hover {
+    background: var(--primary);
+    color: var(--white);
+}
+
+.btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+}
+
+.btn-block {
+    width: 100%;
+}
+
+/* ===== Hero Section ===== */
+.hero {
+    padding: 6rem 2rem;
+    text-align: center;
+    background: linear-gradient(135deg, var(--background) 0%, #FFF5E1 100%);
+}
+
+.hero-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+    color: var(--text-dark);
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero-description {
+    font-size: 1.25rem;
+    color: var(--text-light);
+    margin-bottom: 2.5rem;
+    line-height: 1.8;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* ===== Features Section ===== */
+.features {
+    padding: 5rem 2rem;
+    background: var(--white);
+}
+
+.section-title {
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 3rem;
+    color: var(--text-dark);
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.feature-card {
+    background: var(--background);
+    padding: 2rem;
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px var(--shadow-lg);
+    border-color: var(--secondary);
+}
+
+.feature-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    color: var(--white);
+}
+
+.feature-icon svg {
+    width: 32px;
+    height: 32px;
+}
+
+.feature-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--primary);
+}
+
+.feature-card p {
+    color: var(--text-light);
+    line-height: 1.7;
+}
+
+/* ===== How It Works Section ===== */
+.how-it-works {
+    padding: 5rem 2rem;
+    background: linear-gradient(135deg, var(--background) 0%, #FFF5E1 100%);
+}
+
+.steps {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+    margin-top: 3rem;
+    flex-wrap: wrap;
+}
+
+.step {
+    background: var(--white);
+    padding: 2rem;
+    border-radius: 16px;
+    text-align: center;
+    max-width: 280px;
+    box-shadow: 0 4px 15px var(--shadow);
+    transition: all 0.3s ease;
+}
+
+.step:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px var(--shadow-lg);
+}
+
+.step-number {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--accent), #FF8C66);
+    color: var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 auto 1.5rem;
+}
+
+.step h3 {
+    font-size: 1.3rem;
+    margin-bottom: 0.75rem;
+    color: var(--primary);
+}
+
+.step p {
+    color: var(--text-light);
+    line-height: 1.6;
+}
+
+.step-arrow {
+    font-size: 2rem;
+    color: var(--secondary);
+    font-weight: 700;
+}
+
+/* ===== CTA Section ===== */
+.cta {
+    padding: 5rem 2rem;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    text-align: center;
+}
+
+.cta-content {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.cta h2 {
+    font-size: 2.5rem;
+    color: var(--white);
+    margin-bottom: 1rem;
+}
+
+.cta p {
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 2rem;
+}
+
+/* ===== Footer ===== */
+.footer {
+    background: var(--text-dark);
+    color: var(--white);
+    padding: 2rem;
+    text-align: center;
+}
+
+.footer-content p {
+    margin: 0;
+    opacity: 0.8;
+}
+
+/* ===== Dashboard ===== */
+.dashboard {
+    padding: 3rem 2rem;
+    min-height: calc(100vh - 200px);
+}
+
+.dashboard-header {
+    margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+    font-size: 2.5rem;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+}
+
+.info-card {
+    background: var(--white);
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px var(--shadow);
+}
+
+.info-card h2 {
+    color: var(--primary);
+    margin-bottom: 1rem;
+}
+
+.user-info {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: var(--background);
+    border-radius: 12px;
+}
+
+.user-info h3 {
+    color: var(--primary);
+    margin-bottom: 1rem;
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .hero-description {
+        font-size: 1.1rem;
+    }
+    
+    .nav-links {
+        gap: 0.75rem;
+    }
+    
+    .btn {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+    }
+    
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .step-arrow {
+        display: none;
+    }
+}

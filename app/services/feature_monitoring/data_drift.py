@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+import asyncio
+import logging
 from scipy.stats import ks_2samp
 from sqlalchemy import select, func
 from app.database import models
@@ -17,6 +19,7 @@ from app.constants import (
     DRIFT_ALERT_THRESHOLD
 )
 
+logger = logging.getLogger(__name__)
 
 class InputDataDriftMonitor:
     def __init__(
@@ -93,7 +96,7 @@ class InputDataDriftMonitor:
             
             if not config:
                 # Use defaults from constants if no config found
-                print(f"No drift config found for project {self.project_id}, using defaults")
+                logger.info(f"No drift config found for project {self.project_id}, using defaults")
                 if self.mean_threshold is None: self.mean_threshold = DRIFT_MEAN_THRESHOLD
                 if self.median_threshold is None: self.median_threshold = DRIFT_MEDIAN_THRESHOLD
                 if self.variance_threshold is None: self.variance_threshold = DRIFT_VARIANCE_THRESHOLD
@@ -248,16 +251,9 @@ class InputDataDriftMonitor:
             
         return tests, alerts_count
 
-    # ---------- Main Execution ----------
-
-    async def run(self):
-        """Execute the full drift monitoring workflow."""
-        await self.load_config()
-        
-        alerted_features = []
-        total_drift_score = 0.0
-        
-        for col in self.numeric_cols:
+    def _process_single_column(self, col):
+        """Process stats and drift tests for a single column."""
+        try:
             base_series = self.baseline_data[col]
             curr_series = self.current_data[col]
             
@@ -265,22 +261,55 @@ class InputDataDriftMonitor:
             baseline_stats = self._calculate_stats(base_series)
             current_stats = self._calculate_stats(curr_series)
             
-            self.snapshot_data["feature_stats"][col] = {
+            stats = {
                 "baseline": baseline_stats,
                 "current": current_stats
             }
             
             # B. Run Tests
             tests, alert_signals = self._run_tests_for_column(col, base_series, curr_series)
-            if tests:
-                self.snapshot_data["drift_tests"][col] = tests
-                
-                # Check for Alert
-                if alert_signals >= self.alert_threshold:
-                    alerted_features.append(col)
-                    self.snapshot_data["overall_drift"] = True
+            
+            return col, stats, tests, alert_signals
+        except Exception as e:
+            logger.error(f"Error processing column {col}: {str(e)}")
+            return col, None, None, 0
 
+    def _process_all_columns(self):
+        """Synchronous method to process all columns. To be run in executor."""
+        results = {}
+        alerted_features = []
+        
+        for col in self.numeric_cols:
+            col_name, stats, tests, alert_signals = self._process_single_column(col)
+            
+            if stats:
+                results[col_name] = {"stats": stats, "tests": tests}
+                
+                if tests and alert_signals >= self.alert_threshold:
+                    alerted_features.append(col_name)
+                    
+        return results, alerted_features
+
+    # ---------- Main Execution ----------
+
+    async def run(self):
+        """Execute the full drift monitoring workflow."""
+        await self.load_config()
+        
+        # Offload heavy calculation to thread pool
+        loop = asyncio.get_event_loop()
+        results, alerted_features = await loop.run_in_executor(None, self._process_all_columns)
+        
+        # Unpack results into snapshot structure
+        for col, data in results.items():
+            self.snapshot_data["feature_stats"][col] = data["stats"]
+            if data["tests"]:
+                self.snapshot_data["drift_tests"][col] = data["tests"]
+        
         self.snapshot_data["alerts"] = alerted_features
+        if alerted_features:
+            self.snapshot_data["overall_drift"] = True
+            
         # Simple drift score: % of alerted features
         if len(self.numeric_cols) > 0:
             self.snapshot_data["drift_score"] = len(alerted_features) / len(self.numeric_cols)
@@ -300,9 +329,9 @@ class InputDataDriftMonitor:
                 baseline_window=self.baseline_window,
                 current_window=self.current_window
             )
-            print(f"✓ LLM interpretation generated for project {self.project_id}")
+            logger.info(f"LLM interpretation generated for project {self.project_id}")
         except Exception as e:
-            print(f"Warning: Failed to generate LLM interpretation: {str(e)}")
+            logger.warning(f"Failed to generate LLM interpretation: {str(e)}")
             llm_msg = None
         
         # Store in database
@@ -324,9 +353,9 @@ class InputDataDriftMonitor:
                 )
                 db.add(snapshot)
                 await db.commit()
-                print(f"✓ Drift Snapshot stored for project {self.project_id}")
+                logger.info(f"Drift Snapshot stored for project {self.project_id}")
                 
             except Exception as e:
                 await db.rollback()
-                print(f"Error storing drift snapshot: {str(e)}")
+                logger.error(f"Error storing drift snapshot: {str(e)}")
 

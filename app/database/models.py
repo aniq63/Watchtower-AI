@@ -165,6 +165,26 @@ class Project(Base):
         back_populates="project",
         cascade="all, delete-orphan"
     )
+    
+    # New Config Relationships
+    prediction_evaluation_config = relationship(
+        "PredictionEvaluationConfig",
+        back_populates="project",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
+    llm_drift_config = relationship(
+        "LLMDriftConfig",
+        back_populates="project",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
+    llm_evaluation_config = relationship(
+        "LLMEvaluationConfig",
+        back_populates="project",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
 
 # =============================================================================
 # FEATURE MONITORING SDK
@@ -539,7 +559,6 @@ class LLMMonitor(Base):
     detoxify = Column(JSON, nullable=False)
     is_toxic = Column(Boolean, nullable=False, default=False)
     llm_judge_metrics = Column(JSON, nullable=True)
-    has_drift = Column(Boolean, nullable=False, default=False)
     created_at = Column(TIMESTAMP, server_default=func.now())
 
     project = relationship("Project", back_populates="llm_monitors")
@@ -617,3 +636,52 @@ class LLMDrift(Base):
         Index("idx_llm_drift_project_id", "project_id"),
         Index("idx_llm_drift_project_created", "project_id", "created_at"),
     )
+
+class PredictionEvaluationConfig(Base):
+    __tablename__ = "prediction_evaluation_config"
+
+    config_id = Column(Integer, primary_key=True, index=True)
+    project_id = Column(
+        Integer,
+        ForeignKey("projects.project_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    metric_thresholds = Column(JSON, nullable=False, default={})
+    min_samples = Column(Integer, nullable=False, default=50)
+    created_at = Column(TIMESTAMP, server_default=func.now())
+
+    project = relationship("Project", back_populates="prediction_evaluation_config")
+
+class LLMDriftConfig(Base):
+    __tablename__ = "llm_drift_config"
+
+    config_id = Column(Integer, primary_key=True, index=True)
+    project_id = Column(
+        Integer,
+        ForeignKey("projects.project_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    token_drift_threshold = Column(Float, nullable=False, default=0.15)
+    embedding_drift_threshold = Column(Float, nullable=False, default=0.2)
+    created_at = Column(TIMESTAMP, server_default=func.now())
+
+    project = relationship("Project", back_populates="llm_drift_config")
+
+class LLMEvaluationConfig(Base):
+    __tablename__ = "llm_evaluation_config"
+
+    config_id = Column(Integer, primary_key=True, index=True)
+    project_id = Column(
+        Integer,
+        ForeignKey("projects.project_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    toxicity_threshold = Column(Float, nullable=False, default=0.5)
+    hallucination_threshold = Column(Float, nullable=False, default=0.5)
+    relevance_threshold = Column(Float, nullable=False, default=0.7)
+    created_at = Column(TIMESTAMP, server_default=func.now())
+
+    project = relationship("Project", back_populates="llm_evaluation_config")

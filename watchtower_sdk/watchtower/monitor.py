@@ -13,7 +13,7 @@ class WatchtowerInputMonitor:
         self.api_key = api_key
         self.project_name = project_name
         self.endpoint = endpoint.rstrip("/")  # remove trailing slash
-        self.client = HTTPClient(api_key=self.api_key, endpoint=self.endpoint)
+        self.client = HTTPClient(api_key=self.api_key, endpoint=self.endpoint, timeout=60)
 
     def log(
         self,

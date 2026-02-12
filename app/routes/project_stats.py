@@ -351,7 +351,6 @@ async def get_llm_queries(
             "response_token_length": llm.response_token_length,
             "toxicity_score": llm.detoxify.get("toxicity", 0) if llm.detoxify else 0,
             "is_toxic": llm.is_toxic,
-            "has_drift": llm.has_drift,
             "created_at": llm.created_at.isoformat() if llm.created_at else None
         }
         for llm in llm_data
@@ -401,7 +400,6 @@ async def get_llm_query_detail(
         "detoxify": llm.detoxify,  # Full JSON with all scores
         "is_toxic": llm.is_toxic,
         "llm_judge_metrics": llm.llm_judge_metrics,  # Full JSON
-        "has_drift": llm.has_drift,
         "created_at": llm.created_at.isoformat() if llm.created_at else None
     }
 

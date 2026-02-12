@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Drift Analysis - Watchtower AI{% endblock %}
+
+{% block auth_buttons %}
+<div class="user-menu">
+    <a href="/project/{{ project_id }}" class="btn btn-outline btn-sm">← Back to Project</a>
+    <button class="btn btn-outline" onclick="handleLogout()">Logout</button>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/drift_detail.css">
+{% endblock %}
+
+{% block content %}
+<section class="drift-analysis-page">
+    <div class="container">
+        <!-- Header -->
+        <div class="page-header">
+            <h1>Dataset Drift Analysis</h1>
+            <div class="drift-status-banner" id="drift-status-banner">
+                <span id="drift-status-text">Loading...</span>
+            </div>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="summary-stats">
+            <div class="stat-box">
+                <div class="stat-number" id="total-columns">--</div>
+                <div class="stat-label">Columns</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="drifted-columns">--</div>
+                <div class="stat-label">Drifted Columns</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="drift-share">--</div>
+                <div class="stat-label">Share of Drifted Columns</div>
+            </div>
+        </div>
+
+        <!-- Data Drift Summary -->
+        <div class="drift-summary-section">
+            <h2>Data Drift Summary</h2>
+            <div class="summary-text" id="summary-text">
+                Loading drift summary...
+            </div>
+
+            <!-- LLM Interpretation -->
+            <div id="llm-interpretation-box" class="llm-interpretation" style="display: none;">
+                <div class="llm-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="llm-icon">
+                        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-width="2" />
+                    </svg>
+                    <strong>AI Interpretation</strong>
+                </div>
+                <div class="llm-text" id="llm-interpretation-text"></div>
+            </div>
+        </div>
+
+        <!-- Test Tabs -->
+        <div class="test-tabs-container">
+            <div class="tabs-header">
+                <button class="tab-btn active" data-tab="mean-shift" onclick="switchTab('mean-shift')">
+                    Mean Shift Test
+                </button>
+                <button class="tab-btn" data-tab="median-shift" onclick="switchTab('median-shift')">
+                    Median Shift Test
+                </button>
+                <button class="tab-btn" data-tab="variance-shift" onclick="switchTab('variance-shift')">
+                    Variance Shift Test
+                </button>
+                <button class="tab-btn" data-tab="ks-test" onclick="switchTab('ks-test')">
+                    KS Test
+                </button>
+                <button class="tab-btn" data-tab="psi" onclick="switchTab('psi')">
+                    PSI Test
+                </button>
+                <button class="tab-btn" data-tab="model-based" onclick="switchTab('model-based')">
+                    Model-Based Drift
+                </button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tabs-content">
+                <!-- Mean Shift Tab -->
+                <div class="tab-pane active" id="mean-shift-pane">
+                    <div class="test-description">
+                        <p>Detects significant changes in the average value of features. Threshold indicates the maximum
+                            acceptable relative change.</p>
+                    </div>
+                    <div class="columns-table-wrapper">
+                        <table class="columns-table">
+                            <thead>
+                                <tr>
+                                    <th>Column</th>
+                                    <th>Type</th>
+                                    <th>Baseline Mean</th>
+                                    <th>Current Mean</th>
+                                    <th>Change</th>
+                                    <th>Threshold</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mean-shift-tbody">
+                                <tr>
+                                    <td colspan="7" class="loading-cell">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Median Shift Tab -->
+                <div class="tab-pane" id="median-shift-pane">
+                    <div class="test-description">
+                        <p>Detects significant changes in the median value of features. More robust to outliers than
+                            mean.</p>
+                    </div>
+                    <div class="columns-table-wrapper">
+                        <table class="columns-table">
+                            <thead>
+                                <tr>
+                                    <th>Column</th>
+                                    <th>Type</th>
+                                    <th>Baseline Median</th>
+                                    <th>Current Median</th>
+                                    <th>Change</th>
+                                    <th>Threshold</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="median-shift-tbody">
+                                <tr>
+                                    <td colspan="7" class="loading-cell">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Variance Shift Tab -->
+                <div class="tab-pane" id="variance-shift-pane">
+                    <div class="test-description">
+                        <p>Detects significant changes in the spread/variability of features.</p>
+                    </div>
+                    <div class="columns-table-wrapper">
+                        <table class="columns-table">
+                            <thead>
+                                <tr>
+                                    <th>Column</th>
+                                    <th>Type</th>
+                                    <th>Baseline Variance</th>
+                                    <th>Current Variance</th>
+                                    <th>Change</th>
+                                    <th>Threshold</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="variance-shift-tbody">
+                                <tr>
+                                    <td colspan="7" class="loading-cell">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- KS Test Tab -->
+                <div class="tab-pane" id="ks-test-pane">
+                    <div class="test-description">
+                        <p>Kolmogorov-Smirnov test compares the overall distribution shape. Lower p-value indicates
+                            drift.</p>
+                    </div>
+                    <div class="columns-table-wrapper">
+                        <table class="columns-table">
+                            <thead>
+                                <tr>
+                                    <th>Column</th>
+                                    <th>Type</th>
+                                    <th>KS Statistic</th>
+                                    <th>P-Value</th>
+                                    <th>Threshold</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ks-test-tbody">
+                                <tr>
+                                    <td colspan="6" class="loading-cell">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- PSI Tab -->
+                <div class="tab-pane" id="psi-pane">
+                    <div class="test-description">
+                        <p>Population Stability Index measures population shift. PSI < 0.1: No change, 0.1-0.2:
+                                Moderate, > 0.2: Significant.</p>
+                    </div>
+                    <div class="columns-table-wrapper">
+                        <table class="columns-table">
+                            <thead>
+                                <tr>
+                                    <th>Column</th>
+                                    <th>Type</th>
+                                    <th>PSI Value</th>
+                                    <th>Severity</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="psi-tbody">
+                                <tr>
+                                    <td colspan="5" class="loading-cell">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Model-Based Drift Tab -->
+                <div class="tab-pane" id="model-based-pane">
+                    <div class="test-description">
+                        <p>Uses a machine learning model (Random Forest) to distinguish between baseline and current data.
+                            High accuracy (> 0.5) indicates the data is easily distinguishable, meaning drift has occurred.</p>
+                    </div>
+                    
+                    <div class="model-drift-results" id="model-drift-container" style="display: none;">
+                        <div class="stat-box" style="max-width: 400px; margin: 0 auto;">
+                            <div class="stat-number" id="model-drift-score">--</div>
+                            <div class="stat-label">Model Drift Score (Accuracy)</div>
+                            <div style="margin-top: 10px;">
+                                <span class="status-badge" id="model-drift-status">--</span>
+                            </div>
+                            <p style="margin-top: 10px; color: #666; font-size: 0.9em;">
+                                Threshold: <span id="model-drift-threshold">--</span>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div id="model-drift-empty" class="empty-cell" style="display: none;">
+                        No model-based drift results available for this run.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Hidden IDs -->
+<input type="hidden" id="project-id" value="{{ project_id }}">
+<input type="hidden" id="drift-id" value="{{ drift_id }}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/static/js/drift_detail.js"></script>
+{% endblock %}

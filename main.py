@@ -8,9 +8,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
-from app.routes import auth, get_api, projects, ingest, data_quality, data_validation, drift_detection, llm_monitoring, statistics, project_stats
-from app.database.connection import init_db, close_db
-from app.services.llm_monitoring.llm_model_init import initialize_llm_models
+from app.routes import auth, get_api, projects, ingest, data_quality, data_validation, drift_detection, llm_monitoring, statistics, project_stats, feature_monitoring, prediction_monitoring
+
+# ... imports ...
 
 app = FastAPI(
     title="Watchtower AI API",
@@ -18,37 +18,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Add CORS middleware for frontend integration
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize database and preload models on startup."""
-    await init_db()
-    # Preload expensive LLM models in background to avoid blocking startup
-    initialize_llm_models(background=True)
-
-@app.on_event("startup")
-async def startup_debugger():
-    """Log registered routes on startup."""
-    print("\n" + "="*60)
-    print("Registered Routes:")
-    print("="*60)
-    for route in app.routes:
-        methods = ','.join(route.methods) if hasattr(route, 'methods') else 'N/A'
-        print(f"  {route.path:<40} [{methods}]")
-    print("="*60 + "\n")
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Clean up resources on shutdown."""
-    await close_db()
+# ... middleware ...
 
 # Include routers
 app.include_router(auth.router)
@@ -61,6 +31,10 @@ app.include_router(drift_detection.router)
 app.include_router(llm_monitoring.router)
 app.include_router(statistics.router)
 app.include_router(project_stats.router)
+
+# New Project-Type Specific Routers
+app.include_router(feature_monitoring.router)
+app.include_router(prediction_monitoring.router)
 
 @app.get("/api/health", tags=["Health"])
 async def health_check():
