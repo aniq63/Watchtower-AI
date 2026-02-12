@@ -1,3 +1,4 @@
+import os
 import requests
 from .exceptions import WatchtowerSDKError
 
@@ -8,18 +9,21 @@ class HTTPClient:
     Handles authentication and error management.
     """
     
-    def __init__(self, api_key: str, endpoint: str, timeout: int = 30):
+    def __init__(self, api_key: str = None, endpoint: str = None, timeout: int = 30):
         """
         Initialize HTTP client.
         
         Args:
-            api_key: API key for authentication
-            endpoint: Base URL for the API
+            api_key: API key for authentication (optional if WATCHTOWER_API_KEY env var set)
+            endpoint: Base URL for the API (optional if WATCHTOWER_API_URL env var set)
             timeout: Request timeout in seconds (default: 30)
         """
-        self.api_key = api_key
-        self.endpoint = endpoint
+        self.api_key = api_key or os.environ.get("WATCHTOWER_API_KEY")
+        self.endpoint = endpoint or os.environ.get("WATCHTOWER_API_URL", "http://localhost:8000")
         self.timeout = timeout
+        
+        if not self.api_key:
+            raise WatchtowerSDKError("API Key is required. Pass it to init or set WATCHTOWER_API_KEY env var.")
 
     def post(self, path: str, payload: dict) -> dict:
         """

@@ -9,10 +9,18 @@ class WatchtowerInputMonitor:
     Handles logging features to Watchtower AI backend for validation and drift detection.
     """
 
-    def __init__(self, api_key: str, project_name: str, endpoint: str):
-        self.api_key = api_key
+    def __init__(self, project_name: str, api_key: str = None, endpoint: str = None):
         self.project_name = project_name
-        self.endpoint = endpoint.rstrip("/")  # remove trailing slash
+        self.api_key = api_key
+        
+        # If endpoint is passed, use it. If not, client will check env var. 
+        # If we pass None to client, it checks env var.
+        # But we need to handle rstrip safely.
+        
+        self.endpoint = endpoint
+        if self.endpoint:
+            self.endpoint = self.endpoint.rstrip("/")
+            
         self.client = HTTPClient(api_key=self.api_key, endpoint=self.endpoint, timeout=60)
 
     def log(
@@ -63,10 +71,13 @@ class WatchtowerModelMonitor:
     SDK object for model prediction & metric monitoring.
     """
 
-    def __init__(self, api_key: str, project_name: str, endpoint: str, model_type: str = None):
-        self.api_key = api_key
+    def __init__(self, project_name: str, api_key: str = None, endpoint: str = None, model_type: str = None):
         self.project_name = project_name
-        self.endpoint = endpoint.rstrip("/")
+        self.api_key = api_key
+        self.endpoint = endpoint
+        if self.endpoint:
+            self.endpoint = self.endpoint.rstrip("/")
+            
         self.model_type = model_type  # "classification" or "regression"
         self.client = HTTPClient(api_key=self.api_key, endpoint=self.endpoint)
 
