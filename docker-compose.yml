@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://watchtower:watchtower_password@db:5432/watchtower_db
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      # Add other keys here or use .env file
+    depends_on:
+      - db
+    volumes:
+      - .:/app  # meaningful for development (hot reloads if using --reload)
+
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=watchtower
+      - POSTGRES_PASSWORD=watchtower_password
+      - POSTGRES_DB=watchtower_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
