@@ -1,0 +1,588 @@
+{% extends "base.html" %}
+
+{% block title %}Documentation - Watchtower AI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/docs.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+{% endblock %}
+
+{% block content %}
+<!-- Docs Hero -->
+<section class="docs-hero">
+    <div class="container">
+        <h1 class="docs-hero-title">Documentation</h1>
+        <p class="docs-hero-subtitle">Everything you need to integrate Watchtower AI into your ML pipeline.</p>
+    </div>
+</section>
+
+<div class="docs-layout container">
+    <!-- Sidebar Navigation -->
+    <aside class="docs-sidebar" id="docsSidebar">
+        <nav class="docs-nav">
+            <h4 class="docs-nav-title">Getting Started</h4>
+            <a href="#installation" class="docs-nav-link active">Installation</a>
+            <a href="#configuration" class="docs-nav-link">Configuration</a>
+            <a href="#quick-start" class="docs-nav-link">Quick Start</a>
+
+            <h4 class="docs-nav-title">Feature Monitoring SDK</h4>
+            <a href="#input-monitor" class="docs-nav-link">WatchtowerInputMonitor</a>
+            <a href="#input-usage" class="docs-nav-link">Usage & Examples</a>
+            <a href="#drift-tests" class="docs-nav-link">Drift Detection Tests</a>
+            <a href="#drift-thresholds" class="docs-nav-link">Threshold Configuration</a>
+            <a href="#data-quality" class="docs-nav-link">Data Quality Checks</a>
+
+            <h4 class="docs-nav-title">Prediction Monitoring SDK</h4>
+            <a href="#model-monitor" class="docs-nav-link">WatchtowerModelMonitor</a>
+            <a href="#prediction-usage" class="docs-nav-link">Usage & Examples</a>
+            <a href="#prediction-metrics" class="docs-nav-link">Supported Metrics</a>
+
+            <h4 class="docs-nav-title">LLM Monitoring SDK</h4>
+            <a href="#llm-monitor" class="docs-nav-link">WatchtowerLLMMonitor</a>
+            <a href="#llm-usage" class="docs-nav-link">Usage & Examples</a>
+            <a href="#llm-features" class="docs-nav-link">Evaluation Features</a>
+
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="docs-content">
+
+        <!-- ================================================================== -->
+        <!-- GETTING STARTED -->
+        <!-- ================================================================== -->
+        <section id="installation" class="docs-section">
+            <h2>Installation</h2>
+            <p>Install the Watchtower SDK from PyPI using pip:</p>
+            <pre><code class="language-bash">pip install watchtower</code></pre>
+            <div class="docs-callout docs-callout-info">
+                <strong>Requirements:</strong> Python 3.8+ &bull; The SDK depends on <code>requests</code>,
+                <code>pandas</code>, and <code>numpy</code>.
+            </div>
+        </section>
+
+        <section id="configuration" class="docs-section">
+            <h2>Configuration</h2>
+            <p>The SDK uses environment variables for zero-config setup in production. Set these before running your
+                application:</p>
+            <pre><code class="language-bash"># Required: Your project's API key from the Watchtower dashboard
+export WATCHTOWER_API_KEY="your_project_api_key"
+
+# Required for cloud: Your deployed backend URL
+export WATCHTOWER_API_URL="https://watchtower-ai-94wt.onrender.com"</code></pre>
+            <p>If <code>WATCHTOWER_API_URL</code> is not set, the SDK defaults to <code>http://localhost:8000</code>.
+            </p>
+            <div class="docs-callout docs-callout-tip">
+                <strong>Tip:</strong> You can also pass <code>api_key</code> and <code>endpoint</code> directly to any
+                monitor constructor. Environment variables are simply the recommended approach for production.
+            </div>
+        </section>
+
+        <section id="quick-start" class="docs-section">
+            <h2>Quick Start</h2>
+            <p>Here's the fastest way to start logging data:</p>
+            <pre><code class="language-python">import pandas as pd
+from watchtower.monitor import WatchtowerInputMonitor
+
+# Initialize (reads WATCHTOWER_API_KEY and WATCHTOWER_API_URL from env)
+monitor = WatchtowerInputMonitor(project_name="My ML Project")
+
+# Load and send your data
+df = pd.read_csv("production_data.csv")
+response = monitor.log(df)
+print(response)</code></pre>
+            <p>That's it! Your data is now being monitored for drift and quality issues on the Watchtower dashboard.</p>
+        </section>
+
+        <!-- ================================================================== -->
+        <!-- FEATURE MONITORING SDK -->
+        <!-- ================================================================== -->
+        <div class="docs-divider"></div>
+
+        <section id="input-monitor" class="docs-section">
+            <h2>
+                <span class="docs-badge">SDK 1</span>
+                Feature Monitoring — <code>WatchtowerInputMonitor</code>
+            </h2>
+            <p>This is the primary SDK for monitoring <strong>tabular/structured data</strong>. Use it to log feature
+                vectors (model inputs) so Watchtower can detect data drift, validate data quality, and alert you when
+                your production data deviates from training data.</p>
+
+            <h3>Constructor</h3>
+            <div class="docs-api-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Type</th>
+                            <th>Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>project_name</code></td>
+                            <td>str</td>
+                            <td>Yes</td>
+                            <td>The name of your project (must match the project created on the dashboard).</td>
+                        </tr>
+                        <tr>
+                            <td><code>api_key</code></td>
+                            <td>str</td>
+                            <td>No</td>
+                            <td>API key. Falls back to <code>WATCHTOWER_API_KEY</code> env var.</td>
+                        </tr>
+                        <tr>
+                            <td><code>endpoint</code></td>
+                            <td>str</td>
+                            <td>No</td>
+                            <td>Backend URL. Falls back to <code>WATCHTOWER_API_URL</code> env var.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="input-usage" class="docs-section">
+            <h3>Usage & Examples</h3>
+            <h4>Logging a Pandas DataFrame</h4>
+            <pre><code class="language-python">import pandas as pd
+from watchtower.monitor import WatchtowerInputMonitor
+
+monitor = WatchtowerInputMonitor(project_name="Credit Scoring v2", api_key="your_project_api_key", endpoint="https://watchtower-ai-94wt.onrender.com")
+
+df = pd.DataFrame({
+    "age": [25, 34, 45, 52, 61],
+    "income": [45000, 78000, 92000, 55000, 110000],
+    "credit_score": [680, 720, 750, 630, 800],
+    "loan_amount": [15000, 25000, 35000, 10000, 50000]
+})
+
+response = monitor.log(df, stage="model_input")
+print(response)</code></pre>
+
+            <h4>Logging with Custom Metadata</h4>
+            <pre><code class="language-python">from datetime import datetime
+
+response = monitor.log(
+    features=df,
+    stage="model_input",
+    event_time=datetime(2026, 2, 13, 12, 0, 0),
+    metadata={"batch_id": "batch_042", "environment": "production"}
+)</code></pre>
+            <div class="docs-callout docs-callout-info">
+                <strong>Supported Data Formats:</strong> The <code>log()</code> method accepts Pandas DataFrames,
+                Python dictionaries, lists of dicts, and NumPy arrays. All are automatically serialized.
+            </div>
+        </section>
+
+        <section id="drift-tests" class="docs-section">
+            <h3>Drift Detection Tests</h3>
+            <p>Once enough data is ingested, Watchtower automatically runs the following statistical tests to detect
+                drift between your <strong>baseline</strong> (training) data and <strong>current</strong> (production)
+                data:</p>
+
+            <div class="docs-test-grid">
+                <div class="docs-test-card">
+                    <div class="docs-test-icon">μ</div>
+                    <h4>Mean Shift</h4>
+                    <p>Measures the relative change in the mean value of each feature. A large shift indicates the
+                        central tendency of your data has changed.</p>
+                    <span class="docs-test-tag">Statistical</span>
+                </div>
+                <div class="docs-test-card">
+                    <div class="docs-test-icon">M̃</div>
+                    <h4>Median Shift</h4>
+                    <p>Measures the relative change in the median. More robust to outliers than the mean, useful for
+                        skewed distributions.</p>
+                    <span class="docs-test-tag">Statistical</span>
+                </div>
+                <div class="docs-test-card">
+                    <div class="docs-test-icon">σ²</div>
+                    <h4>Variance Shift</h4>
+                    <p>Detects changes in the spread/dispersion of your data. A widening or narrowing variance often
+                        signals upstream data pipeline issues.</p>
+                    <span class="docs-test-tag">Statistical</span>
+                </div>
+                <div class="docs-test-card">
+                    <div class="docs-test-icon">KS</div>
+                    <h4>Kolmogorov-Smirnov Test</h4>
+                    <p>A non-parametric test that compares the entire cumulative distribution. If p-value &lt;
+                        threshold,
+                        the distributions are statistically different.</p>
+                    <span class="docs-test-tag">Distribution</span>
+                </div>
+                <div class="docs-test-card">
+                    <div class="docs-test-icon">Ψ</div>
+                    <h4>Population Stability Index (PSI)</h4>
+                    <p>Quantifies how much the distribution has shifted. PSI &lt; 0.1 = no drift, 0.1–0.25 = moderate
+                        drift, &gt; 0.25 = significant drift.</p>
+                    <span class="docs-test-tag">Distribution</span>
+                </div>
+                <div class="docs-test-card">
+                    <div class="docs-test-icon">🌲</div>
+                    <h4>Model-Based Drift</h4>
+                    <p>Trains a RandomForest classifier to distinguish between baseline and current data. If accuracy
+                        &gt; 50% threshold, drift is detected.</p>
+                    <span class="docs-test-tag">ML-Based</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="drift-thresholds" class="docs-section">
+            <h3>Threshold Configuration</h3>
+            <p>Watchtower uses sensible defaults for all drift thresholds. You can customize them per-project via the
+                dashboard or the API.</p>
+
+            <div class="docs-api-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Threshold</th>
+                            <th>Default Value</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>mean_threshold</code></td>
+                            <td><strong>0.10</strong> (10%)</td>
+                            <td>Maximum allowed relative change in mean before flagging drift.</td>
+                        </tr>
+                        <tr>
+                            <td><code>median_threshold</code></td>
+                            <td><strong>0.10</strong> (10%)</td>
+                            <td>Maximum allowed relative change in median.</td>
+                        </tr>
+                        <tr>
+                            <td><code>variance_threshold</code></td>
+                            <td><strong>0.20</strong> (20%)</td>
+                            <td>Maximum allowed relative change in variance.</td>
+                        </tr>
+                        <tr>
+                            <td><code>ks_pvalue_threshold</code></td>
+                            <td><strong>0.05</strong></td>
+                            <td>If p-value is below this, the KS test flags drift.</td>
+                        </tr>
+                        <tr>
+                            <td><code>psi_thresholds</code></td>
+                            <td><strong>[0.1, 0.25]</strong></td>
+                            <td>PSI severity bands: &lt; 0.1 = None, 0.1–0.25 = Moderate, &gt; 0.25 = High.</td>
+                        </tr>
+                        <tr>
+                            <td><code>psi_bins</code></td>
+                            <td><strong>10</strong></td>
+                            <td>Number of histogram bins used for PSI calculation.</td>
+                        </tr>
+                        <tr>
+                            <td><code>min_samples</code></td>
+                            <td><strong>50</strong></td>
+                            <td>Minimum data points required for valid statistical tests.</td>
+                        </tr>
+                        <tr>
+                            <td><code>alert_threshold</code></td>
+                            <td><strong>2</strong></td>
+                            <td>Number of individual test failures needed to trigger an overall drift alert.</td>
+                        </tr>
+                        <tr>
+                            <td><code>model_based_drift_threshold</code></td>
+                            <td><strong>0.50</strong></td>
+                            <td>RandomForest accuracy above this value indicates drift.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="data-quality" class="docs-section">
+            <h3>Data Quality Checks</h3>
+            <p>Beyond drift, Watchtower automatically performs quality checks on every batch of data you log:</p>
+            <ul class="docs-feature-list">
+                <li><strong>Missing Values:</strong> Identifies columns with null/NaN values and reports the percentage
+                    per column.</li>
+                <li><strong>Duplicate Rows:</strong> Detects and counts duplicate records in the batch.</li>
+                <li><strong>Schema Validation:</strong> Verifies that the number of columns and their data types match
+                    the expected schema from the first batch.</li>
+                <li><strong>LLM Interpretation:</strong> An AI-powered summary of drift results, explaining what changed
+                    and why it matters.</li>
+            </ul>
+        </section>
+
+        <!-- ================================================================== -->
+        <!-- PREDICTION MONITORING SDK -->
+        <!-- ================================================================== -->
+        <div class="docs-divider"></div>
+
+        <section id="model-monitor" class="docs-section">
+            <h2>
+                <span class="docs-badge badge-green">SDK 2</span>
+                Prediction Monitoring — <code>WatchtowerModelMonitor</code>
+            </h2>
+            <p>Use this SDK to monitor your <strong>model outputs</strong> and <strong>performance metrics</strong> over
+                time. It supports both classification and regression models.</p>
+
+            <h3>Constructor</h3>
+            <div class="docs-api-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Type</th>
+                            <th>Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>project_name</code></td>
+                            <td>str</td>
+                            <td>Yes</td>
+                            <td>The name of your project.</td>
+                        </tr>
+                        <tr>
+                            <td><code>api_key</code></td>
+                            <td>str</td>
+                            <td>No</td>
+                            <td>API key. Falls back to env var.</td>
+                        </tr>
+                        <tr>
+                            <td><code>endpoint</code></td>
+                            <td>str</td>
+                            <td>No</td>
+                            <td>Backend URL. Falls back to env var.</td>
+                        </tr>
+                        <tr>
+                            <td><code>model_type</code></td>
+                            <td>str</td>
+                            <td>No</td>
+                            <td><code>"classification"</code> or <code>"regression"</code>.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="prediction-usage" class="docs-section">
+            <h3>Usage & Examples</h3>
+            <h4>Logging Predictions with Metrics (Classification)</h4>
+            <pre><code class="language-python">from watchtower.monitor import WatchtowerModelMonitor
+
+model_monitor = WatchtowerModelMonitor(
+    project_name="Fraud Detector",
+    model_type="classification",
+    api_key="your_project_api_key",
+    endpoint="https://watchtower-ai-94wt.onrender.com"
+)
+
+# Log predictions along with current performance metrics
+predictions = [0, 1, 0, 0, 1, 1, 0, 1]
+
+response = model_monitor.log(
+    predictions=predictions,
+    accuracy=0.92,
+    precision=0.89,
+    recall=0.95,
+    f1_score=0.91,
+    roc_auc=0.96,
+    metadata={"batch_id": "eval_batch_7"}
+)
+print(response)</code></pre>
+
+            <h4>Logging Predictions with Metrics (Regression)</h4>
+            <pre><code class="language-python">model_monitor = WatchtowerModelMonitor(
+    project_name="House Price Predictor",
+    model_type="regression"
+)
+
+predictions = [250000, 180000, 320000, 410000]
+
+response = model_monitor.log(
+    predictions=predictions,
+    mae=12500.0,
+    mse=225000000.0,
+    rmse=15000.0,
+    r2_score=0.87
+)</code></pre>
+        </section>
+
+        <section id="prediction-metrics" class="docs-section">
+            <h3>Supported Metrics</h3>
+            <div class="docs-metrics-grid">
+                <div class="docs-metric-group">
+                    <h4>Classification</h4>
+                    <ul>
+                        <li><code>accuracy</code> — Overall correctness (0–1)</li>
+                        <li><code>precision</code> — True positives / predicted positives</li>
+                        <li><code>recall</code> — True positives / actual positives</li>
+                        <li><code>f1_score</code> — Harmonic mean of precision & recall</li>
+                        <li><code>roc_auc</code> — Area under the ROC curve</li>
+                    </ul>
+                </div>
+                <div class="docs-metric-group">
+                    <h4>Regression</h4>
+                    <ul>
+                        <li><code>mae</code> — Mean Absolute Error</li>
+                        <li><code>mse</code> — Mean Squared Error</li>
+                        <li><code>rmse</code> — Root Mean Squared Error</li>
+                        <li><code>r2_score</code> — R-squared coefficient</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================== -->
+        <!-- LLM MONITORING SDK -->
+        <!-- ================================================================== -->
+        <div class="docs-divider"></div>
+
+        <section id="llm-monitor" class="docs-section">
+            <h2>
+                <span class="docs-badge badge-purple">SDK 3</span>
+                LLM Monitoring — <code>WatchtowerLLMMonitor</code>
+            </h2>
+            <p>Designed for <strong>Generative AI / LLM</strong> applications. Log every prompt-response pair and get
+                automated analysis for toxicity, response quality, token usage, and semantic drift.</p>
+
+            <h3>Constructor</h3>
+            <div class="docs-api-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Type</th>
+                            <th>Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>api_key</code></td>
+                            <td>str</td>
+                            <td>Yes</td>
+                            <td>API key for authentication.</td>
+                        </tr>
+                        <tr>
+                            <td><code>project_name</code></td>
+                            <td>str</td>
+                            <td>Yes</td>
+                            <td>The name of your LLM project.</td>
+                        </tr>
+                        <tr>
+                            <td><code>endpoint</code></td>
+                            <td>str</td>
+                            <td>No</td>
+                            <td>Backend URL. Defaults to <code>http://localhost:8000</code>.</td>
+                        </tr>
+                        <tr>
+                            <td><code>timeout</code></td>
+                            <td>int</td>
+                            <td>No</td>
+                            <td>Request timeout in seconds. Default: <code>60</code>.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="llm-usage" class="docs-section">
+            <h3>Usage & Examples</h3>
+            <h4>Logging an LLM Interaction</h4>
+            <pre><code class="language-python">from watchtower.llm_monitor import WatchtowerLLMMonitor
+
+llm_monitor = WatchtowerLLMMonitor(
+    api_key="your_api_key",
+    project_name="Customer Support Bot",
+    endpoint="https://watchtower-ai-94wt.onrender.com"
+)
+
+response = llm_monitor.log_interaction(
+    input_text="How do I reset my password?",
+    response_text="Navigate to Settings > Security > Reset Password. You will receive a confirmation email.",
+    metadata={
+        "model": "gpt-4",
+        "latency_ms": 320,
+        "user_id": "user_abc123",
+        "session_id": "sess_789"
+    }
+)
+print(response)</code></pre>
+
+            <h4>Batch Logging in a Loop</h4>
+            <pre><code class="language-python"># Log multiple interactions from a conversation
+conversations = [
+    {"input": "What are your hours?", "output": "We are open 9 AM - 5 PM, Mon-Fri."},
+    {"input": "Can I speak to a manager?", "output": "I'll transfer you to our management team."},
+]
+
+for conv in conversations:
+    llm_monitor.log_interaction(
+        input_text=conv["input"],
+        response_text=conv["output"]
+    )</code></pre>
+        </section>
+
+        <section id="llm-features" class="docs-section">
+            <h3>Evaluation Features</h3>
+            <p>When you log LLM interactions, Watchtower automatically evaluates them on the backend:</p>
+
+            <div class="docs-test-grid">
+                <div class="docs-test-card">
+                    <div class="docs-test-icon">🛡️</div>
+                    <h4>Toxicity Detection</h4>
+                    <p>Each response is scanned using the Detoxify library. Scores above the configurable threshold
+                        (default: 0.5) are flagged as toxic.</p>
+                    <span class="docs-test-tag tag-red">Safety</span>
+                </div>
+                <div class="docs-test-card">
+                    <div class="docs-test-icon">📊</div>
+                    <h4>Token Length Tracking</h4>
+                    <p>Response token lengths are tracked over time. Sudden increases or decreases in verbosity can
+                        signal model behavior changes.</p>
+                    <span class="docs-test-tag">Performance</span>
+                </div>
+                <div class="docs-test-card">
+                    <div class="docs-test-icon">📉</div>
+                    <h4>Token Length Drift</h4>
+                    <p>Compares average token lengths between baseline and monitoring windows. Drift threshold default:
+                        15% change.</p>
+                    <span class="docs-test-tag">Distribution</span>
+                </div>
+                <div class="docs-test-card">
+                    <div class="docs-test-icon">🧠</div>
+                    <h4>LLM Judge Evaluation</h4>
+                    <p>Uses a secondary LLM to evaluate response quality, relevance, and hallucination risk with
+                        configurable thresholds.</p>
+                    <span class="docs-test-tag tag-purple">AI-Powered</span>
+                </div>
+            </div>
+        </section>
+
+
+
+    </main>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>
+    hljs.highlightAll();
+
+    // Sidebar active link tracking
+    const sections = document.querySelectorAll('.docs-section');
+    const navLinks = document.querySelectorAll('.docs-nav-link');
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                navLinks.forEach(link => link.classList.remove('active'));
+                const activeLink = document.querySelector(`.docs-nav-link[href="#${entry.target.id}"]`);
+                if (activeLink) activeLink.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-20% 0px -60% 0px' });
+
+    sections.forEach(section => observer.observe(section));
+</script>
+{% endblock %}

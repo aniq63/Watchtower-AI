@@ -71,6 +71,11 @@ async def landing_page(request: Request):
     """Serve the landing page."""
     return templates.TemplateResponse("landing.html", {"request": request})
 
+@app.get("/documentation", response_class=HTMLResponse, tags=["Frontend"])
+async def documentation_page(request: Request):
+    """Serve the documentation page."""
+    return templates.TemplateResponse("documentation.html", {"request": request})
+
 @app.get("/dashboard", response_class=HTMLResponse, tags=["Frontend"])
 async def dashboard(request: Request):
     """Serve the user dashboard (requires authentication)."""
