@@ -69,7 +69,7 @@
 export WATCHTOWER_API_KEY="your_project_api_key"
 
 # Required for cloud: Your deployed backend URL
-export WATCHTOWER_API_URL="https://watchtower-ai-94wt.onrender.com"</code></pre>
+export WATCHTOWER_API_URL="https://watchtower-ai-production-604f.up.railway.app"</code></pre>
             <p>If <code>WATCHTOWER_API_URL</code> is not set, the SDK defaults to <code>http://localhost:8000</code>.
             </p>
             <div class="docs-callout docs-callout-tip">
@@ -149,7 +149,7 @@ print(response)</code></pre>
             <pre><code class="language-python">import pandas as pd
 from watchtower.monitor import WatchtowerInputMonitor
 
-monitor = WatchtowerInputMonitor(project_name="Credit Scoring v2", api_key="your_project_api_key", endpoint="https://watchtower-ai-94wt.onrender.com")
+monitor = WatchtowerInputMonitor(project_name="Credit Scoring v2", api_key="your_project_api_key", endpoint="https://watchtower-ai-production-604f.up.railway.app")
 
 df = pd.DataFrame({
     "age": [25, 34, 45, 52, 61],
@@ -371,7 +371,7 @@ model_monitor = WatchtowerModelMonitor(
     project_name="Fraud Detector",
     model_type="classification",
     api_key="your_project_api_key",
-    endpoint="https://watchtower-ai-94wt.onrender.com"
+    endpoint="https://watchtower-ai-production-604f.up.railway.app"
 )
 
 # Log predictions along with current performance metrics
@@ -492,7 +492,7 @@ response = model_monitor.log(
 llm_monitor = WatchtowerLLMMonitor(
     api_key="your_api_key",
     project_name="Customer Support Bot",
-    endpoint="https://watchtower-ai-94wt.onrender.com"
+    endpoint="https://watchtower-ai-production-604f.up.railway.app"
 )
 
 response = llm_monitor.log_interaction(

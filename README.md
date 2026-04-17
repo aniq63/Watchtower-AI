@@ -12,8 +12,8 @@
   <a href="https://pypi.org/project/watchtower-sdk/0.1.1/">
     <img src="https://img.shields.io/pypi/v/watchtower-sdk?color=orange&label=PyPI&logo=pypi&logoColor=white" alt="PyPI Version">
   </a>
-  <a href="https://watchtower-ai-94wt.onrender.com">
-    <img src="https://img.shields.io/badge/Live%20Demo-Render-blue?logo=render&logoColor=white" alt="Live Demo">
+  <a href="https://watchtower-ai-production-604f.up.railway.app">
+    <img src="https://img.shields.io/badge/Live%20Demo-Railway-0b0d0e?logo=railway&logoColor=white" alt="Live Demo">
   </a>
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT">
@@ -32,7 +32,7 @@ Watchtower AI is a **self-hosted monitoring framework** designed to track model 
 
 ### 🌐 Live Demo
 
-👉 **[https://watchtower-ai-94wt.onrender.com](https://watchtower-ai-94wt.onrender.com)**
+👉 **[https://watchtower-ai-production-604f.up.railway.app](https://watchtower-ai-production-604f.up.railway.app)**
 
 ---
 
@@ -100,7 +100,7 @@ from watchtower.monitor import WatchtowerInputMonitor
 monitor = WatchtowerInputMonitor(
     project_name="My ML Project",
     api_key="your_project_api_key",
-    endpoint="https://watchtower-ai-94wt.onrender.com"
+    endpoint="https://watchtower-ai-production-604f.up.railway.app"
 )
 
 df = pd.read_csv("production_data.csv")
@@ -116,7 +116,7 @@ from watchtower.monitor import WatchtowerModelMonitor
 model_monitor = WatchtowerModelMonitor(
     project_name="Fraud Detector",
     api_key="your_project_api_key",
-    endpoint="https://watchtower-ai-94wt.onrender.com",
+    endpoint="https://watchtower-ai-production-604f.up.railway.app",
     model_type="classification"
 )
 
@@ -138,7 +138,7 @@ from watchtower.llm_monitor import WatchtowerLLMMonitor
 llm_monitor = WatchtowerLLMMonitor(
     api_key="your_api_key",
     project_name="Customer Support Bot",
-    endpoint="https://watchtower-ai-94wt.onrender.com"
+    endpoint="https://watchtower-ai-production-604f.up.railway.app"
 )
 
 llm_monitor.log_interaction(
@@ -204,13 +204,13 @@ uvicorn main:app --reload
 docker-compose up --build
 ```
 
-### Deploy to Render
+### Deploy to Railway
 
 1. Push your code to GitHub.
-2. Create a new **Web Service** on [Render](https://render.com).
+2. Create a new **Web Service** on [Railway](https://railway.app).
 3. Connect your GitHub repository.
 4. Set environment variables (`DATABASE_URL`, `GROQ_API_KEY`).
-5. Render will auto-build from the `Dockerfile` and deploy.
+5. Railway will auto-build from the `Dockerfile` and deploy.
 
 ---
 
@@ -256,7 +256,7 @@ Watchtower-AI/
 | `WatchtowerModelMonitor` | Log predictions & metrics | `/ingest/predictions` |
 | `WatchtowerLLMMonitor` | Log LLM prompt-response pairs | `/llm/ingest` |
 
-**Full documentation:** [https://watchtower-ai-94wt.onrender.com/documentation](https://watchtower-ai-94wt.onrender.com/documentation)
+**Full documentation:** [https://watchtower-ai-production-604f.up.railway.app/documentation](https://watchtower-ai-production-604f.up.railway.app/documentation)
 
 **PyPI Package:** [https://pypi.org/project/watchtower-sdk/](https://pypi.org/project/watchtower-sdk/0.1.1/)
 
@@ -271,7 +271,7 @@ Watchtower-AI/
 | **Frontend** | Jinja2, Vanilla JS, CSS |
 | **ML/Stats** | Pandas, NumPy, SciPy, Scikit-learn |
 | **LLM** | LangChain, Groq, Detoxify |
-| **Deployment** | Docker, Render.com |
+| **Deployment** | Docker, Railway.app |
 | **SDK** | Published on PyPI |
 
 ---
