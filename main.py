@@ -12,8 +12,6 @@ from contextlib import asynccontextmanager
 from app.database.connection import init_db
 from app.routes import auth, get_api, projects, ingest, data_quality, data_validation, drift_detection, llm_monitoring, statistics, project_stats, feature_monitoring, prediction_monitoring
 
-# ... imports ...
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
