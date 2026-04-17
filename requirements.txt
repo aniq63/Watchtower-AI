@@ -23,5 +23,6 @@ langchain-community>=0.0.1
 langchain-groq>=0.0.1
 typing-extensions>=4.8.0
 detoxify>=0.4.0
-transformers>=4.30.0
-torch>=2.0.0
+# The following libraries are handled in the Dockerfile to ensure CPU-only versions
+# transformers>=4.30.0
+# torch>=2.0.0
