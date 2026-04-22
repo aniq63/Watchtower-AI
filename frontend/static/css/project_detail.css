@@ -460,45 +460,111 @@
 
 /* ===== Responsive Design ===== */
 @media (max-width: 768px) {
+    .project-detail {
+        padding: 1.5rem 0 3rem;
+    }
+
     .project-header-section {
         flex-direction: column;
         gap: 1.5rem;
+        padding-bottom: 1.5rem;
+        margin-bottom: 1.5rem;
     }
 
     .project-info h1 {
-        font-size: 2rem;
+        font-size: 1.8rem;
+    }
+
+    .project-info p {
+        font-size: 1rem;
     }
 
     .overview-stats {
         grid-template-columns: 1fr;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        padding: 1.25rem;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+    }
+
+    .stat-icon svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .stat-content h3 {
+        font-size: 1.5rem;
     }
 
     .tabs-nav {
         flex-wrap: nowrap;
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 0.5rem;
+        padding: 0 0.5rem;
     }
 
     .tab-btn {
         flex: 0 0 auto;
-        padding: 1rem 1.5rem;
+        padding: 1rem 1.25rem;
+        font-size: 0.9rem;
     }
 
     .tabs-content {
-        padding: 1.5rem;
+        padding: 1.25rem 1rem;
+    }
+
+    .tab-header h2 {
+        font-size: 1.5rem;
     }
 
     .drift-summary-cards,
     .llm-metrics-cards {
         grid-template-columns: 1fr;
+        gap: 1rem;
     }
 
-    .data-table {
-        font-size: 0.9rem;
+    .summary-card {
+        padding: 1.25rem;
     }
 
-    .data-table th,
-    .data-table td {
-        padding: 0.75rem 0.5rem;
+    .summary-value {
+        font-size: 2rem;
+    }
+
+    .chart-container {
+        padding: 1.5rem 1rem;
+    }
+
+    .chart-container h3 {
+        font-size: 1.3rem;
+    }
+
+    .threshold-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .token-display-config {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .danger-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .btn-danger {
+        width: 100%;
     }
 }
 

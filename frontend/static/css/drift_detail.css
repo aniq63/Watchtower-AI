@@ -363,15 +363,41 @@
 }
 
 @media (max-width: 768px) {
+    .drift-analysis-page {
+        padding: 1rem 0;
+    }
+
+    .drift-analysis-page .container {
+        padding: 0 1rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .drift-status-banner {
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+    }
+
+    .stat-box {
+        padding: 1.5rem;
+    }
+
     .tabs-header {
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        overflow-x: auto;
     }
     
     .tab-btn {
-        flex: 1 1 auto;
-        min-width: 120px;
+        flex: 0 0 auto;
+        padding: 0.75rem 1rem;
     }
     
+    .tabs-content {
+        padding: 1.25rem 1rem;
+    }
+
     .columns-table {
         font-size: 0.75rem;
     }
@@ -383,5 +409,9 @@
     
     .stat-number {
         font-size: 2rem;
+    }
+
+    .distribution-cell {
+        display: none; /* Hide distribution column on very small screens for space */
     }
 }

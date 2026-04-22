@@ -217,10 +217,22 @@
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
     .modal-content {
-        padding: 2rem;
+        padding: 2rem 1.5rem;
+        margin: 0 1rem;
+        width: 100%;
+        max-width: 400px;
     }
 
     .auth-title {
         font-size: 1.75rem;
+    }
+
+    .auth-subtitle {
+        margin-bottom: 1.5rem;
+    }
+
+    .modal-close {
+        top: 0.5rem;
+        right: 0.5rem;
     }
 }

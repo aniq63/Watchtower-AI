@@ -400,18 +400,65 @@
 @media (max-width: 900px) {
     .docs-layout {
         grid-template-columns: 1fr;
+        gap: 1.5rem;
+        padding-top: 1rem;
     }
 
     .docs-sidebar {
         position: static;
         max-height: none;
         border-bottom: 1px solid rgba(87, 106, 143, 0.15);
-        padding-bottom: 1.5rem;
+        padding-bottom: 1rem;
         margin-bottom: 1rem;
+        padding-right: 0;
+    }
+
+    .docs-nav {
+        display: flex;
+        overflow-x: auto;
+        gap: 1rem;
+        padding-bottom: 0.5rem;
+        scrollbar-width: none; /* Firefox */
+    }
+
+    .docs-nav::-webkit-scrollbar {
+        display: none; /* Chrome/Safari */
+    }
+
+    .docs-nav-title {
+        display: none; /* Hide titles in horizontal scroll mode */
+    }
+
+    .docs-nav-link {
+        white-space: nowrap;
+        border-left: none;
+        border-bottom: 3px solid transparent;
+        padding: 0.5rem 0;
+        margin-bottom: 0;
+        border-radius: 0;
+    }
+
+    .docs-nav-link.active {
+        background: none;
+        border-bottom-color: var(--accent);
+    }
+
+    .docs-hero {
+        padding: 3rem 1rem 1.5rem;
     }
 
     .docs-hero-title {
-        font-size: 2.2rem;
+        font-size: 2rem;
+    }
+
+    .docs-section h2 {
+        font-size: 1.75rem;
+    }
+
+    .docs-section pre {
+        padding: 1rem;
+        margin: 0 -1rem 1.5rem;
+        border-radius: 0;
     }
 
     .docs-test-grid {

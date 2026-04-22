@@ -27,7 +27,15 @@
                 <span class="brand-name">Watchtower AI</span>
             </div>
 
-            <div class="nav-links">
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="12" x2="21" y2="12" class="line-mid"></line>
+                    <line x1="3" y1="6" x2="21" y2="6" class="line-top"></line>
+                    <line x1="3" y1="18" x2="21" y2="18" class="line-bottom"></line>
+                </svg>
+            </button>
+
+            <div class="nav-links" id="navLinks">
                 <a href="/documentation" class="nav-link">Documentation</a>
                 <a href="https://github.com/aniq63/Watchtower-AI" target="_blank" class="nav-link">
                     <svg class="github-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -61,6 +69,7 @@
 
     <script src="/static/js/modal.js"></script>
     <script src="/static/js/auth.js"></script>
+    <script src="/static/js/mobile-menu.js"></script>
     {% block extra_js %}{% endblock %}
 </body>
 
