@@ -36,6 +36,16 @@ Watchtower AI is a **self-hosted monitoring framework** designed to track model 
 
 ---
 
+## 🖼️ Application Screenshots
+
+<p align="center">
+  <img src="images/1771002820266.jpg" alt="Watchtower AI dashboard screenshot" width="320" style="margin: 0 10px;" />
+  <img src="images/1771002820458.jpg" alt="Data drift visualization" width="320" style="margin: 0 10px;" />
+  <img src="images/1771002820940.jpg" alt="Feature monitoring detail" width="320" style="margin: 0 10px;" />
+</p>
+
+---
+
 ## ✨ Key Features
 
 | Feature | Description |
