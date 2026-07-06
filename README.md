@@ -24,19 +24,19 @@
 
 ---
 
-## 🔭 What is Watchtower AI?
+## What is Watchtower AI?
 
 Watchtower AI is a **self-hosted monitoring framework** designed to track model performance, data drift, data quality, and LLM behavior in real-time. It provides actionable insights through an integrated dashboard, enabling data-driven decisions for model retraining and maintenance in production environments.
 
 > **Think of it as Datadog, but specifically built for ML pipelines and LLM applications.**
 
-### 🌐 Live Demo
+### Live Demo
 
 👉 **[https://watchtower-ai-production-604f.up.railway.app](https://watchtower-ai-production-604f.up.railway.app)**
 
 ---
 
-## 🖼️ Application Screenshots
+## Application Screenshots
 
 <p align="center">
   <img src="images/1771002820266.jpg" alt="Watchtower AI dashboard screenshot" width="320" style="margin: 0 10px;" />
@@ -46,21 +46,21 @@ Watchtower AI is a **self-hosted monitoring framework** designed to track model 
 
 ---
 
-## ✨ Key Features
+## Key Features
 
 | Feature | Description |
 |---|---|
-| 📊 **Data Drift Detection** | Detect distribution shifts using KS Test, PSI, Mean/Median/Variance Shift, and Model-Based drift detection. |
-| 🧪 **Data Quality Monitoring** | Validate schema, detect missing values, and identify duplicate records automatically. |
-| 📈 **Prediction Monitoring** | Track classification (accuracy, precision, recall, F1, AUC) and regression (MAE, MSE, RMSE, R²) metrics over time. |
-| 🤖 **LLM Observability** | Monitor prompt-response pairs, detect toxicity, track token usage, and evaluate response quality with an LLM Judge. |
-| 🧠 **AI-Powered Insights** | Get natural language interpretations of drift results powered by LLM analysis. |
-| ⚡ **Real-Time Alerting** | Configurable thresholds trigger alerts when drift or quality issues exceed limits. |
-| 📉 **Interactive Dashboard** | Visualize trends, drill into per-feature drift snapshots, and compare baseline vs. production distributions. |
+| **Data Drift Detection** | Detect distribution shifts using KS Test, PSI, Mean/Median/Variance Shift, and Model-Based drift detection. |
+| **Data Quality Monitoring** | Validate schema, detect missing values, and identify duplicate records automatically. |
+| **Prediction Monitoring** | Track classification (accuracy, precision, recall, F1, AUC) and regression (MAE, MSE, RMSE, R²) metrics over time. |
+| **LLM Observability** | Monitor prompt-response pairs, detect toxicity, track token usage, and evaluate response quality with an LLM Judge. |
+| **AI-Powered Insights** | Get natural language interpretations of drift results powered by LLM analysis. |
+| **Real-Time Alerting** | Configurable thresholds trigger alerts when drift or quality issues exceed limits. |
+| **Interactive Dashboard** | Visualize trends, drill into per-feature drift snapshots, and compare baseline vs. production distributions. |
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -93,7 +93,7 @@ Watchtower AI is a **self-hosted monitoring framework** designed to track model 
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Install the SDK
 
@@ -160,7 +160,7 @@ llm_monitor.log_interaction(
 
 ---
 
-## 📊 Drift Detection Tests
+## Drift Detection Tests
 
 Watchtower runs **6 statistical tests** on every monitoring snapshot:
 
@@ -177,7 +177,7 @@ All thresholds are **configurable per-project** via the dashboard.
 
 ---
 
-## 🛠️ Self-Hosting
+## Self-Hosting
 
 ### Prerequisites
 
@@ -224,7 +224,7 @@ docker-compose up --build
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 Watchtower-AI/
@@ -258,7 +258,7 @@ Watchtower-AI/
 
 ---
 
-## 📦 SDK Reference
+## SDK Reference
 
 | SDK Class | Purpose | Endpoint |
 |---|---|---|
@@ -272,7 +272,7 @@ Watchtower-AI/
 
 ---
 
-## 🧰 Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -298,23 +298,23 @@ Watchtower AI is **open-source** and we welcome contributions from the community
 
 ### Ways to Contribute
 
-- � **Bug Reports** — Found a bug? Open an [issue](https://github.com/aniq63/Watchtower-AI/issues).
-- 💡 **Feature Requests** — Have an idea? Start a [discussion](https://github.com/aniq63/Watchtower-AI/issues).
-- 📝 **Documentation** — Improve docs, fix typos, add examples.
-- 🧪 **Tests** — Add unit tests or integration tests.
-- 🔧 **Code** — Fix bugs, optimize performance, or add new drift detection algorithms.
+- **Bug Reports** — Found a bug? Open an [issue](https://github.com/aniq63/Watchtower-AI/issues).
+- **Feature Requests** — Have an idea? Start a [discussion](https://github.com/aniq63/Watchtower-AI/issues).
+- **Documentation** — Improve docs, fix typos, add examples.
+- **Tests** — Add unit tests or integration tests.
+- **Code** — Fix bugs, optimize performance, or add new drift detection algorithms.
 
-All contributions, big or small, are greatly appreciated! ⭐
+All contributions, big or small, are greatly appreciated!
 
 ---
 
-## �📄 License
+## License
 
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 👤 Author
+## Author
 
 **Muhammad Aniq Ramzan**
 
